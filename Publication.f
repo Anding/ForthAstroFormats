@@ -64,6 +64,13 @@ NEED ForthAtomicFile
     fileid close-file abort" Cannot close binary publication"
 ;
 
+: no-preview-manifest-extension ( fileid -- )
+    drop
+;
+
+DEFER write-preview-manifest-extension ( fileid -- )
+ASSIGN no-preview-manifest-extension TO-DO write-preview-manifest-extension
+
 : publish-preview-manifest { preview? histogram? | fileid -- }
 \ Atomically publish the paths of the selected preview artifacts.
     image s" .dat" preview-manifest-filepath
@@ -85,6 +92,7 @@ NEED ForthAtomicFile
         write-manifest-line
     fileid s" time-stamp" s" DATE-END" image FRAME_METADATA @ >string
         write-manifest-line
+    fileid write-preview-manifest-extension
     fileid close-file abort" Cannot close manifest"
     preview-manifest-tmp-filepath preview-manifest-filepath
         replace-file-atomically

@@ -20,13 +20,19 @@ s" 11111111-2222-3333-4444-555555555555"
 : publication.test-write { | fileid -- }
 \ Write representative absolute and frame-relative manifest records.
     publication.test.filepath reset-buffer
-    s" E:\Coding\ForthAstroFormats\testdata\publication.dat"
+    s" E:\Coding\ForthAstroFormats\testdata\"
         publication.test.filepath write-buffer drop
+    publication.test.filepath buffer-punctuate-filepath
+    s" publication.dat" publication.test.filepath write-buffer drop
     publication.test.filepath open-publication-file -> fileid
     fileid s" image name" s" test-image" write-manifest-line
     fileid s" image filepath" publication.test.filepath
         write-path-manifest-line
     fileid close-file abort" Cannot close publication test file"
+;
+
+: publication.test-extension { fileid -- }
+    fileid s" test extension" s" test value" write-manifest-line
 ;
 
 : publication.test-versioned-path ( -- caddr u )
@@ -45,6 +51,15 @@ T{ publication.test-versioned-path hashS
 T{ publication.test-write }T ==
 T{ publication.test.filepath
    s" E:\\Coding\\ForthAstroFormats\\testdata\\publication.dat"
+   publication.test-contains?
+}T -1 ==
+
+ASSIGN publication.test-extension TO-DO write-preview-manifest-extension
+T{ publication.test.filepath open-publication-file dup
+   write-preview-manifest-extension close-file
+}T 0 ==
+T{ publication.test.filepath
+   s\" test extension: \"test value\""
    publication.test-contains?
 }T -1 ==
 
