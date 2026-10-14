@@ -25,9 +25,15 @@ need simple-tester
     buffer free-buffer
 ;
 
-s" E:\images\tests\ForthAstroFormats\publication.tmp" publication.source write-buffer drop
-s" E:\images\tests\ForthAstroFormats\publication.dat" publication.destination write-buffer drop
-s" E:\images\tests\ForthAstroFormats\projection.dat" projection.path write-buffer drop
+s" E:\images\tests\ForthAstroFormats" publication.source write-buffer drop
+publication.source buffer-punctuate-filepath
+s" \publication.tmp" publication.source write-buffer drop
+s" E:\images\tests\ForthAstroFormats" publication.destination write-buffer drop
+publication.destination buffer-punctuate-filepath
+s" \publication.dat" publication.destination write-buffer drop
+s" E:\images\tests\ForthAstroFormats" projection.path write-buffer drop
+projection.path buffer-punctuate-filepath
+s" \projection.dat" projection.path write-buffer drop
 s" FIRST" projection.expected write-buffer drop
 9 projection.expected echo-buffer drop
 s" first" projection.expected write-buffer drop

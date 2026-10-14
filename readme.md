@@ -35,6 +35,13 @@ pathname policy and retains the resulting path. `save-FITSprojection-to` is
 the explicit low-level form. Both write the ordered FITS map as UTF-8
 `key<TAB>value<CRLF>` lines through an in-memory buffer.
 
+For fault isolation, enable `LOG-ON` and `-1 -> FITS.projection-debug`.
+The `fits-projection` channel records each key, value length and hexadecimal
+bytes, plus file creation, allocation, iteration, write, free and close
+boundaries. Detailed projection logging is off by default and follows
+`log.directory`. `FITS_projection_test2.f` covers empty values, zero, NUL,
+control bytes and maximum-length counted values without hardware.
+
 `replace-file-atomically` expects ForthBase buffer descriptors containing
 source and destination paths. It temporarily appends the required NUL
 terminators, calls the native `ReplaceFileAtomic` export, and restores the
