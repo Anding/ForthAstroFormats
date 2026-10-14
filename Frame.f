@@ -15,6 +15,7 @@ BEGIN-STRUCTURE FRAME
                 4   +FIELD FRAME_HEIGHT
                 4   +FIELD FRAME_DEPTH
                 4   +FIELD FRAME_SIZE_BYTES
+                4   +FIELD FRAME_CAPACITY_BYTES
                 4   +FIELD FRAME_METADATA
                 4   +FIELD FRAME_STATISTICS
                 0   +FIELD FRAME_BITMAP
@@ -31,6 +32,7 @@ FRAME constant FRAME_DESCRIPTOR
     width height depth 2* * * -> bytes
     bytes FRAME_DESCRIPTOR + allocate abort" unable to allocate frame" -> frame
     bytes frame FRAME_SIZE_BYTES !
+    bytes frame FRAME_CAPACITY_BYTES !
     depth frame FRAME_DEPTH !
     height frame FRAME_HEIGHT !
     width frame FRAME_WIDTH !
@@ -52,6 +54,11 @@ FRAME constant FRAME_DESCRIPTOR
 
 : frame-size ( frame -- size-in-bytes )
     FRAME_SIZE_BYTES @
+;
+
+: frame-capacity ( frame -- size-in-bytes )
+\ Return the immutable allocation capacity, distinct from the active ROI size.
+    FRAME_CAPACITY_BYTES @
 ;
 
 : initialize-frame { frame | map x y -- }

@@ -8,6 +8,8 @@ Tstart
 
 T{ test-frame FRAME_METADATA @ ordered-map? }T -1 ==
 T{ test-frame FRAME_STATISTICS @ }T 0 ==
+T{ test-frame frame-size }T 16 8 * 2 * ==
+T{ test-frame frame-capacity }T 16 8 * 2 * ==
 
 test-filepath reset-buffer
 s" E:\images\tests\invalid\artifact.dat" test-filepath write-buffer drop
@@ -29,6 +31,11 @@ T{ test-frame FRAME_METADATA @ count-keys }T 0 ==
 s" reused" test-frame FRAME_METADATA @ =>" FRESH"
 T{ s" FRESH" test-frame FRAME_METADATA @ >string hashS }T
     s" reused" hashS ==
+s" 8" test-frame FRAME_METADATA @ =>" NAXIS1"
+s" 4" test-frame FRAME_METADATA @ =>" NAXIS2"
+test-frame initialize-frame
+T{ test-frame frame-size }T 8 4 * 2 * ==
+T{ test-frame frame-capacity }T 16 8 * 2 * ==
 
 Tend
 
