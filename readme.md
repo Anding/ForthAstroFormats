@@ -33,7 +33,10 @@ replace-file-atomically ( source-buffer destination-buffer -- )
 `save-FITSprojection` writes the shared current image through its dedicated
 pathname policy and retains the resulting path. `save-FITSprojection-to` is
 the explicit low-level form. Both write the ordered FITS map as UTF-8
-`key<TAB>value<CRLF>` lines through an in-memory buffer.
+`key<TAB>value<CRLF>` lines through an in-memory buffer. Before opening the
+output file, projection validates the bounded ordered-map header and totals
+the required bytes; invalid or oversized metadata is rejected before it can
+walk entries or allocate publication state.
 
 For fault isolation, enable `LOG-ON` and `-1 -> FITS.projection-debug`.
 The `fits-projection` channel records each key, value length and hexadecimal

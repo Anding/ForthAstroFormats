@@ -8,6 +8,7 @@ NEED ForthVT100
 
 0 value FITS.projection-debug
 1024 allocate-buffer constant FITS.projection-log-buffer
+variable FITS.projection-bytes
 
 : FITS.projection-log ( caddr u -- )
     FITS.projection-debug if
@@ -47,9 +48,24 @@ NEED ForthVT100
     buf
 ;
 
-: save-FITSprojection-to { img filepath-buffer | fileid projection-buffer -- }
+: FITS.projection-size { map -- size }
+\ Account for key, tab, value, CR, and LF before allocating publication state.
+    0 FITS.projection-bytes !
+    map ORDERED_MAP_COUNT @ 0 ?do
+        i map ordered-map-entry count dup >r
+        map >string nip
+        r> + 3 + FITS.projection-bytes +!
+    loop
+    FITS.projection-bytes @
+;
+
+: save-FITSprojection-to { img filepath-buffer | fileid projection-buffer map -- }
 \ Projection files are small transient publications, so one bounded buffer is
 \ allocated per write and released before returning.
+    img FRAME_METADATA @ -> map
+    map ordered-map-valid? 0= abort" FITS projection map invalid"
+    map FITS.projection-size FITS_PROJECTION_SIZE >
+        abort" FITS projection buffer full"
     filepath-buffer create-imageDirectory
     s" create-file start" FITS.projection-log
     filepath-buffer buffer-to-string w/o
@@ -57,7 +73,7 @@ NEED ForthVT100
     s" allocate start" FITS.projection-log
     FITS_PROJECTION_SIZE allocate-buffer -> projection-buffer
     s" iteration start" FITS.projection-log
-    projection-buffer ['] XISF.mapIterProjection img FRAME_METADATA @ simple-iterate-map drop
+    projection-buffer ['] XISF.mapIterProjection map simple-iterate-map drop
     s" write start" FITS.projection-log
     projection-buffer fileid buffer-to-file
     s" free start" FITS.projection-log
