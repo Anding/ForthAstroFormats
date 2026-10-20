@@ -6,8 +6,9 @@ include "%idir%\properties_obs.f"
 include "%idir%\properties_rig.f"
 include "%idir%\XISF_maps.f"
 
-map CONSTANT FITSmap
-map CONSTANT XISFmap
+NEED ordered-maps
+allocate-map CONSTANT FITSmap
+allocate-map CONSTANT XISFmap
 
 s" Takahashi Epsilon 160-ED" $-> rig.telescope
 160 -> rig.aperature_dia

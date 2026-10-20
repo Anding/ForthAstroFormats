@@ -41,7 +41,7 @@
             6 /string 1-
             s\" value=\"~\"*\"" xisf.header-buffer buffer-match if
                 7 /string 1- FITSstrToStr
-                2swap map =>
+                2swap map map!
             then
         then
     repeat

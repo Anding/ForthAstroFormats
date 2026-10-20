@@ -24,7 +24,7 @@ ASSIGN no-solver TO-DO solve-image
     while
         solver.wcs-line swap FITS.read-line
         dup 0= if
-            drop metadata =>
+            drop metadata map!
         else
             drop
         then
@@ -43,17 +43,71 @@ ASSIGN no-solver TO-DO solve-image
     swap move R> 10
 ;
 
+: solver.alignment-part { caddr u separator | low high rest remaining -- rest u' n }
+\ Parse a required integer component and consume its separator.
+    0 0 caddr u >number -> remaining -> rest -> high -> low
+    remaining u = remaining 0= or high 0<> or
+        abort" Invalid alignment component"
+    rest c@ separator <> abort" Invalid alignment separator"
+    rest 1+ remaining 1- low
+;
+
+: solver.alignment-number~ { caddr u separator | sign x y -- n }
+\ Validate all three fields before constructing a finite fraction.
+    u 0= abort" Missing alignment input"
+    caddr u check-sign -> sign -> u -> caddr
+    caddr u separator solver.alignment-part -> x
+    separator solver.alignment-part -> y
+    -white dup 0= abort" Missing alignment component"
+    >float 0= abort" Invalid alignment component"
+    f>s x y rot ~ sign *
+;
+
+: solver.alignment-night~ { caddr u | sign result low high rest remaining -- n }
+\ Numeric dates retain the legacy finite-fraction encoding without reading
+\ beyond the input when fewer than three components are present.
+    caddr u >float 0= if
+        caddr u '-' solver.alignment-number~ exit
+    then
+    fdrop
+    caddr u check-sign -> sign -> u -> caddr
+    0 -> result
+    3 0 do
+        result ffBasis * -> result
+        u if
+            0 0 caddr u >number -> remaining -> rest -> high -> low
+            remaining u = high 0<> or abort" Invalid alignment date"
+            result low + -> result
+            remaining if
+                rest 1+ -> caddr
+                remaining 1- -> u
+            else
+                0 -> u
+            then
+        then
+    loop
+    result sign *
+;
+
 : solver.alignment-FITS { metadata |
     reported-ra reported-dec sidereal night-of
     solved-ra solved-dec pierside-addr pierside-u -- }
 \ Derive the 10Micron alignment command once from the completed solve context.
-    s" OBJCTRA" metadata >string >number~ -> reported-ra
-    s" OBJCTDEC" metadata >string >number~ -> reported-dec
-    s" SIDEREAL" metadata >string >number~ -> sidereal
-    s" NIGHTOF" metadata >string >number~ -> night-of
-    s" PIERSIDE" metadata >string -> pierside-u -> pierside-addr
-    s" CRVAL1" metadata >string >float drop 1.5E1 f/ fp~ -> solved-ra
-    s" CRVAL2" metadata >string >float drop fp~ -> solved-dec
+    s" OBJCTRA" metadata map@ ':' solver.alignment-number~ -> reported-ra
+    s" OBJCTDEC" metadata map@ ':' solver.alignment-number~ -> reported-dec
+    s" SIDEREAL" metadata map@ ':' solver.alignment-number~ -> sidereal
+    s" NIGHTOF" metadata map@ -white dup 0= abort" Missing alignment NIGHTOF"
+        solver.alignment-night~ -> night-of
+    s" PIERSIDE" metadata map@ -> pierside-u -> pierside-addr
+    pierside-addr pierside-u s" EAST" compare 0<>
+    pierside-addr pierside-u s" WEST" compare 0<> and
+        abort" Invalid alignment pierside"
+    s" CRVAL1" metadata map@ -white dup 0= abort" Missing alignment CRVAL1"
+        >float 0= abort" Invalid alignment CRVAL1"
+        1.5E1 f/ fp~ -> solved-ra
+    s" CRVAL2" metadata map@ -white dup 0= abort" Missing alignment CRVAL2"
+        >float 0= abort" Invalid alignment CRVAL2"
+        fp~ -> solved-dec
 
     s\" s\" " $-> solver.alignment-command
     reported-ra reported-dec night-of JNOW swap

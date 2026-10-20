@@ -33,4 +33,3 @@ fits.stream.path buffer-to-string delete-file drop
 fits.stream.clone-path buffer-to-string delete-file drop
 fits.stream.path free-buffer
 fits.stream.clone-path free-buffer
-bye

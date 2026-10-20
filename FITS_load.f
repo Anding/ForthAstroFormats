@@ -13,7 +13,7 @@
     fits.header-buffer buffer-to-string
     begin
         over 80 FITS.read-line >R
-        R@ 0= if map => then
+        R@ 0= if map map! then
     R> 1 <> while
         80 /string
         dup 0= if ." Unexpected EOF" 2drop exit then

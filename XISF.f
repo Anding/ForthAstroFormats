@@ -8,17 +8,16 @@ XISF_HEADER_SIZE allocate-buffer constant xisf.header-buffer
 \ The XML header occupies a fixed block and the pixel attachment begins at
 \ XISF_HEADER_SIZE. This shared scratch buffer makes the codec synchronous.
 
-: XISF.mapIterXISF ( buf c-addr u map -- buf )
-    >R rot R> swap >R
-    s" FITSKeyword" R@ xml.<tag
-    -rot 2dup s" name" 2swap R@ xml.keyval
-    rot >string StrToFITSStr s" value" 2swap R@ xml.keyval
-    R@ xml./>
-    R>
+: XISF.mapIterXISF { buf key-addr key-u value-addr value-u -- buf }
+    s" FITSKeyword" buf xml.<tag
+    s" name" key-addr key-u buf xml.keyval
+    s" value" value-addr value-u StrToFITSStr buf xml.keyval
+    buf xml./>
+    buf
 ;
 
 : XISF.write-map-XISF ( map buf -- )
-    ['] XISF.mapIterXISF rot simple-iterate-map drop
+    ['] XISF.mapIterXISF rot map-for-each drop
 ;
 
 : XISF.encode-header { frame header-buffer -- }
@@ -34,11 +33,11 @@ XISF_HEADER_SIZE allocate-buffer constant xisf.header-buffer
         s" geometry"
             frame FRAME_WIDTH @ frame FRAME_HEIGHT @ frame FRAME_DEPTH @
             ~~~$ header-buffer xml.keyval
-        s" sampleFormat" s" SMPLFRMT" frame FRAME_METADATA @ >string header-buffer xml.keyval
-        s" colorSpace" s" COLORSPC" frame FRAME_METADATA @ >string header-buffer xml.keyval
-        s" offset" s" OFFSET" frame FRAME_METADATA @ >string header-buffer xml.keyval
-        s" imageType" s" IMAGETYP" frame FRAME_METADATA @ >string header-buffer xml.keyval
-        s" uuid" s" UUID" frame FRAME_METADATA @ >string header-buffer xml.keyval
+        s" sampleFormat" s" SMPLFRMT" frame FRAME_METADATA @ map@ header-buffer xml.keyval
+        s" colorSpace" s" COLORSPC" frame FRAME_METADATA @ map@ header-buffer xml.keyval
+        s" offset" s" OFFSET" frame FRAME_METADATA @ map@ header-buffer xml.keyval
+        s" imageType" s" IMAGETYP" frame FRAME_METADATA @ map@ header-buffer xml.keyval
+        s" uuid" s" UUID" frame FRAME_METADATA @ map@ header-buffer xml.keyval
         s" location" s" attachment:" header-buffer xml.keyval
             XISF_HEADER_SIZE 0 <# #s #> header-buffer xml.append s" :" header-buffer xml.append
             frame frame-size 0 <# #s #> header-buffer xml.append

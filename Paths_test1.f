@@ -52,6 +52,23 @@ T{ paths.test.frame s" .fits" paths.test.filepath write-filepath-fits
    paths.test.filepath buffer-to-string hashS
 }T s" E:\test-images\2026-10-09\Dark\LUM-E5-F5100-555555555555.fits" hashS ==
 
+0 0 paths.test.frame FRAME_METADATA @ =>" UUID"
+T{ paths.test.frame s" .fits" paths.test.filepath write-filepath-fits
+   paths.test.filepath buffer-to-string hashS
+}T s" E:\test-images\2026-10-09\Dark\LUM-E5-F5100.fits" hashS ==
+
+s" 11111111-2222-3333-4444-55555555555"
+    paths.test.frame FRAME_METADATA @ =>" UUID"
+T{ paths.test.frame s" .xisf" paths.test.filepath write-filepath-xisf
+   paths.test.filepath buffer-to-string hashS
+}T s" E:\test-images\2026-10-09\Dark\LUM-E5-F5100.xisf" hashS ==
+
+paths.test.frame reset-frame-metadata
+T{ paths.test.frame s" .wcs" paths.test.filepath write-filepath-wcs
+   paths.test.filepath buffer-to-string hashS
+}T s" E:\test-images\\\-E-F.wcs" hashS ==
+
 paths.test.frame free-frame
+paths.test.filepath free-buffer
 
 Tend

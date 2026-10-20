@@ -13,34 +13,34 @@ create projection.bad-controls 9 c, 13 c, 10 c,
 ;
 
 : projection.bad-check { caddr u -- flag }
-    projection.bad-image FRAME_METADATA @ reset-map
+    projection.bad-image FRAME_METADATA @ erase-map
     caddr u projection.bad-image FRAME_METADATA @ =>" BAD"
     projection.bad-buffer reset-buffer
     projection.bad-buffer ['] XISF.mapIterProjection
-        projection.bad-image FRAME_METADATA @ simple-iterate-map drop
+        projection.bad-image FRAME_METADATA @ map-for-each drop
     projection.bad-buffer buffer_used u 6 + =
     projection.bad-buffer BUFFER_ADDR 4 + u caddr u compare 0= and
 ;
 
 : projection.bad-overflow ( -- )
-    projection.bad-image FRAME_METADATA @ reset-map
+    projection.bad-image FRAME_METADATA @ erase-map
     100 0 do
         projection.bad-bytes 255 i (.)
-        projection.bad-image FRAME_METADATA @ =>
+        projection.bad-image FRAME_METADATA @ map!
     loop
     projection.bad-buffer reset-buffer
     projection.bad-buffer ['] XISF.mapIterProjection
-        projection.bad-image FRAME_METADATA @ simple-iterate-map drop
+        projection.bad-image FRAME_METADATA @ map-for-each drop
 ;
 
 s" E:\images\tests\ForthAstroFormats\projection-too-large.dat"
     projection.bad-path write-buffer drop
 
 : projection.bad-save-overflow ( -- )
-    projection.bad-image FRAME_METADATA @ reset-map
+    projection.bad-image FRAME_METADATA @ erase-map
     100 0 do
         projection.bad-bytes 255 i (.)
-        projection.bad-image FRAME_METADATA @ =>
+        projection.bad-image FRAME_METADATA @ map!
     loop
     projection.bad-image projection.bad-path save-FITSprojection-to
 ;

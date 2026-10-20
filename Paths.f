@@ -31,7 +31,7 @@ FILEPATH_SIZE allocate-buffer constant FITSfilepath
     astro.root filepath-buffer write-buffer drop
     s" working" filepath-buffer append-path
     stream-addr stream-u filepath-buffer append-path
-    s" UUID" frame FRAME_METADATA @ >string filepath-buffer append-path
+    s" UUID" frame FRAME_METADATA @ map@ filepath-buffer append-path
     filepath-buffer buffer-punctuate-filepath
     filename-addr filename-u filepath-buffer append-path
     suffix-addr suffix-u filepath-buffer write-buffer
@@ -118,25 +118,32 @@ DEFER write-filepath-metadata-manifest ( frame caddr u filepath-buffer -- )
 ASSIGN default-write-metadata-manifest-filepath
     TO-DO write-filepath-metadata-manifest
 
+: append-UUID-suffix { uuid-addr uuid-u filepath-buffer -- }
+\ Missing and short UUIDs contribute neither separator nor suffix.
+    uuid-u 36 < if exit then
+    '-' filepath-buffer echo-buffer abort" Science filepath buffer full"
+    uuid-addr 24 + 12 filepath-buffer write-buffer
+        abort" Science filepath buffer full"
+;
+
 : default-write-science-filepath
     { frame suffix-addr suffix-u filepath-buffer | map -- }
 \ Build one complete science filepath with the requested format suffix.
     frame FRAME_METADATA @ -> map
     filepath-buffer reset-buffer
     astro.root filepath-buffer write-buffer drop
-    s" NIGHTOF" map >string filepath-buffer append-path
-    s" IMAGETYP" map >string filepath-buffer append-path
+    s" NIGHTOF" map map@ filepath-buffer append-path
+    s" IMAGETYP" map map@ filepath-buffer append-path
     '\' filepath-buffer echo-buffer drop
     filepath-buffer buffer-punctuate-filepath
-    s" FILTER" map >string filepath-buffer write-buffer drop
+    s" FILTER" map map@ filepath-buffer write-buffer drop
     '-' filepath-buffer echo-buffer drop
     'E' filepath-buffer echo-buffer drop
-    s" EXPTIME" map >string filepath-buffer write-buffer drop
+    s" EXPTIME" map map@ filepath-buffer write-buffer drop
     '-' filepath-buffer echo-buffer drop
     'F' filepath-buffer echo-buffer drop
-    s" FOCUSPOS" map >string filepath-buffer write-buffer drop
-    '-' filepath-buffer echo-buffer drop
-    s" UUID" map >string drop 24 + 12 filepath-buffer write-buffer drop
+    s" FOCUSPOS" map map@ filepath-buffer write-buffer drop
+    s" UUID" map map@ filepath-buffer append-UUID-suffix
     suffix-addr suffix-u filepath-buffer write-buffer
         abort" Science filepath buffer full"
 ;

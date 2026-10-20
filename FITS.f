@@ -7,19 +7,19 @@ create fits.pixel-buffer FITS_TRANSFER_SIZE allot
 \ Header and transfer storage are shared synchronous scratch buffers. The
 \ codec is intentionally non-reentrant; the imaging pipeline serializes saves.
 
-: FITS.map-iterate ( buf c-addr u map -- buf )
-    >R rot R> swap >R
-    -rot dup 8 > if 2drop drop R> exit then
-    2dup R@ write-buffer drop
-    dup 8 swap ?do bl j echo-buffer drop loop
-    s" = " R@ write-buffer drop
-    rot >string 68 min StrToFITSStr 2dup R@ write-buffer drop
-    dup 70 swap ?do bl j echo-buffer drop loop
-    2drop R>
+: FITS.map-iterate { buf key-addr key-u value-addr value-u -- buf }
+    key-u 8 > if buf exit then
+    key-addr key-u buf write-buffer drop
+    8 key-u ?do bl buf echo-buffer drop loop
+    s" = " buf write-buffer drop
+    value-addr value-u 68 min StrToFITSStr
+    2dup buf write-buffer drop
+    70 swap ?do bl buf echo-buffer drop loop
+    drop buf
 ;
 
 : FITS.write-map ( map buf -- )
-    ['] FITS.map-iterate rot simple-iterate-map drop
+    ['] FITS.map-iterate rot map-for-each drop
 ;
 
 : FITS.padded-size ( frame -- size )

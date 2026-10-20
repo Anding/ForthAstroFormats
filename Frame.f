@@ -3,7 +3,7 @@
 NEED ForthBase
 NEED FiniteFractions
 NEED buffers
-NEED forth-map
+NEED ordered-maps
 NEED Shared
 
 0 shared value image
@@ -37,7 +37,7 @@ FRAME constant FRAME_DESCRIPTOR
     height frame FRAME_HEIGHT !
     width frame FRAME_WIDTH !
     frame FRAME_BITMAP bytes erase
-    ordered-map frame FRAME_METADATA !
+    allocate-map frame FRAME_METADATA !
     0 frame FRAME_STATISTICS !
     frame
 ;
@@ -49,7 +49,7 @@ FRAME constant FRAME_DESCRIPTOR
 ;
 
 : reset-frame-metadata ( frame -- )
-    FRAME_METADATA @ reset-map
+    FRAME_METADATA @ erase-map
 ;
 
 : frame-size ( frame -- size-in-bytes )
@@ -65,8 +65,8 @@ FRAME constant FRAME_DESCRIPTOR
 \ Camera download geometry may be smaller than the original full-frame
 \ allocation after subframing. This updates logical dimensions only.
     frame FRAME_METADATA @ -> map
-    s" NAXIS1" map >integer -> x
-    s" NAXIS2" map >integer -> y
+    s" NAXIS1" map map@ toInteger -> x
+    s" NAXIS2" map map@ toInteger -> y
     x frame FRAME_WIDTH !
     y frame FRAME_HEIGHT !
     x y * 2 * frame FRAME_SIZE_BYTES !
@@ -85,6 +85,7 @@ FRAME constant FRAME_DESCRIPTOR
 s" " $value FITSstringBuf
 
 : StrToFITSStr ( caddr u -- caddr u )
+    dup 0= if 2drop s" ''" exit then
     2dup -1 -rot over + swap do i c@ IsFITSnumchar? and dup 0= if leave then loop
     0= if
         s" '" $-> FITSstringBuf $+> FITSstringBuf s" '" $+> FITSstringBuf FITSstringBuf
@@ -92,7 +93,7 @@ s" " $value FITSstringBuf
 ;
 
 : FITSstrToStr ( caddr u -- caddr u )
-    over c@ ''' = if 2 - swap 1 + swap then
+    dup if over c@ ''' = if 2 - swap 1 + swap then then
 ;
 
 : valid-filepath-folder? { filepath-buffer | folder-u -- flag }

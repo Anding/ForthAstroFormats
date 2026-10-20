@@ -88,9 +88,9 @@ ASSIGN no-preview-manifest-extension TO-DO write-preview-manifest-extension
         fileid s" histogram filepath" histogram-filepath
             write-path-manifest-line
     then
-    fileid s" image name" s" UUID" image FRAME_METADATA @ >string
+    fileid s" image name" s" UUID" image FRAME_METADATA @ map@
         write-manifest-line
-    fileid s" time-stamp" s" DATE-END" image FRAME_METADATA @ >string
+    fileid s" time-stamp" s" DATE-END" image FRAME_METADATA @ map@
         write-manifest-line
     fileid write-preview-manifest-extension
     fileid close-file abort" Cannot close manifest"
@@ -107,9 +107,9 @@ ASSIGN no-preview-manifest-extension TO-DO write-preview-manifest-extension
     metadata-manifest-tmp-filepath open-publication-file -> fileid
     fileid s" fits keys filepath" FITSprojection-filepath
         write-path-manifest-line
-    fileid s" image name" s" UUID" image FRAME_METADATA @ >string
+    fileid s" image name" s" UUID" image FRAME_METADATA @ map@
         write-manifest-line
-    fileid s" time-stamp" s" DATE-END" image FRAME_METADATA @ >string
+    fileid s" time-stamp" s" DATE-END" image FRAME_METADATA @ map@
         write-manifest-line
     fileid close-file abort" Cannot close manifest"
     metadata-manifest-tmp-filepath metadata-manifest-filepath

@@ -8,7 +8,6 @@ NEED ForthVT100
 
 0 value FITS.projection-debug
 1024 allocate-buffer constant FITS.projection-log-buffer
-variable FITS.projection-bytes
 
 : FITS.projection-log ( caddr u -- )
     FITS.projection-debug if
@@ -36,9 +35,8 @@ variable FITS.projection-bytes
     buf buffer-to-string FITS.projection-log
 ;
 
-: XISF.mapIterProjection { buf key-addr key-u map | value-addr value-u -- buf }
+: XISF.mapIterProjection { buf key-addr key-u value-addr value-u -- buf }
     key-addr key-u FITS.projection-log
-    key-addr key-u map >string -> value-u -> value-addr
     key-addr key-u value-addr value-u FITS.projection-log-item
     key-addr key-u buf write-buffer abort" FITS projection buffer full"
     9 buf echo-buffer abort" FITS projection buffer full"
@@ -48,22 +46,19 @@ variable FITS.projection-bytes
     buf
 ;
 
-: FITS.projection-size { map -- size }
+: FITS.projection-item-size { total key-addr key-u value-addr value-u -- total' }
+    total key-u + value-u + 3 +
+;
+
+: FITS.projection-size ( map -- size )
 \ Account for key, tab, value, CR, and LF before allocating publication state.
-    0 FITS.projection-bytes !
-    map ORDERED_MAP_COUNT @ 0 ?do
-        i map ordered-map-entry count dup >r
-        map >string nip
-        r> + 3 + FITS.projection-bytes +!
-    loop
-    FITS.projection-bytes @
+    0 ['] FITS.projection-item-size rot map-for-each
 ;
 
 : save-FITSprojection-to { img filepath-buffer | fileid projection-buffer map -- }
 \ Projection files are small transient publications, so one bounded buffer is
 \ allocated per write and released before returning.
     img FRAME_METADATA @ -> map
-    map ordered-map-valid? 0= abort" FITS projection map invalid"
     map FITS.projection-size FITS_PROJECTION_SIZE >
         abort" FITS projection buffer full"
     filepath-buffer create-imageDirectory
@@ -73,7 +68,7 @@ variable FITS.projection-bytes
     s" allocate start" FITS.projection-log
     FITS_PROJECTION_SIZE allocate-buffer -> projection-buffer
     s" iteration start" FITS.projection-log
-    projection-buffer ['] XISF.mapIterProjection map simple-iterate-map drop
+    projection-buffer ['] XISF.mapIterProjection map map-for-each drop
     s" write start" FITS.projection-log
     projection-buffer fileid buffer-to-file
     s" free start" FITS.projection-log

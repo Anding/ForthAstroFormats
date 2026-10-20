@@ -13,6 +13,10 @@ compatibility with existing callers.
 The context owns dimensions, pixel data, a `FITS_MAP`, and image statistics.
 Writers retain their own output paths and update or project the existing
 ordered FITS map rather than maintaining separate metadata objects.
+Metadata uses ForthBase `ordered-maps`: `allocate-map`/`free-map`, `map!`,
+`map@`, `map-count`, and insertion-ordered `map-for-each`. Missing and empty
+values both read as `( 0 0 )`. `reset-frame-metadata` uses `erase-map` to
+forget all per-exposure keys; `reset-map` instead retains keys and order.
 
 ## FITS projection and publication
 
@@ -34,9 +38,9 @@ replace-file-atomically ( source-buffer destination-buffer -- )
 pathname policy and retains the resulting path. `save-FITSprojection-to` is
 the explicit low-level form. Both write the ordered FITS map as UTF-8
 `key<TAB>value<CRLF>` lines through an in-memory buffer. Before opening the
-output file, projection validates the bounded ordered-map header and totals
-the required bytes; invalid or oversized metadata is rejected before it can
-walk entries or allocate publication state.
+output file, projection totals the required bytes with a `map-for-each`
+accumulator and rejects oversized metadata. Serializer callbacks consume
+the supplied key and value strings directly.
 
 For fault isolation, enable `LOG-ON` and `-1 -> FITS.projection-debug`.
 The `fits-projection` channel records each key, value length and hexadecimal
@@ -91,6 +95,18 @@ save-FITSimage
 A private solver temporarily replaces only `write-filepath-fits`, calls
 `save-FITSframe-to`, and restores the previous action.
 
+`append-UUID-suffix ( uuid-addr uuid-u filepath-buffer -- )` appends `-` and
+UUID bytes at offset 24, length 12, only when at least 36 bytes are present.
+Missing, empty, or short UUIDs omit the entire science filename suffix.
+Existing science files may be overwritten. UUID-based working directories
+are unchanged.
+
+`solver.alignment-FITS` rejects missing or unparseable required alignment
+inputs before producing a mount command. Coordinates and sidereal time use
+three colon-separated fields, `NIGHTOF` accepts `YYYY-MM-DD` or the existing
+numeric date representation, `PIERSIDE` is
+`EAST` or `WEST`, and both solved CRVAL fields must parse as floating point.
+
 `NEED ForthPublication` loads the generic UUID-path and manifest record words.
 It owns binary output, manifest publication, and atomic replacement mechanics.
 `NEED ForthPreview` loads the stretched-BMP and histogram writers.
@@ -115,4 +131,8 @@ ForthBase filepath buffer.
 
 `FITS_projection_test1.f` is a standalone `simple-tester` regression suite.
 It verifies ordered projection bytes, atomic replacement and source removal,
-and XISF/FITS filename generation when `FOCUSPOS` is deliberately empty.
+without hardware.
+`Metadata_test1.f` checks serializer order, replacements, empty values, and
+FITS long-key omission. `Frame_test1.f`, `Paths_test1.f`, and
+`Solver_test1.f` cover per-exposure erasure, optional UUID suffixes, and
+rejection of missing or malformed alignment inputs, respectively.

@@ -67,4 +67,3 @@ projection.path free-buffer
 publication.source free-buffer
 publication.destination free-buffer
 projection.expected free-buffer
-bye

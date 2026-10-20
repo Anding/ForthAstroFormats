@@ -7,8 +7,10 @@ include "%idir%\ForthAstroFormats_test_support.f"
 \ Direct both science formats to one deterministic test stem and suffix.
     frame drop
     filepath-buffer reset-buffer
-    s" E:\Coding\ForthAstroFormats\testdata\science-path"
+    s" E:\Coding\ForthAstroFormats\testdata"
         filepath-buffer write-buffer drop
+    filepath-buffer buffer-punctuate-filepath
+    s" \science-path" filepath-buffer write-buffer drop
     suffix-addr suffix-u filepath-buffer write-buffer drop
 ;
 
@@ -28,6 +30,7 @@ T{ FITSfilepath buffer-to-string hashS
 }T s" E:\Coding\ForthAstroFormats\testdata\science-path.fits" hashS ==
 T{ XISFfilepath buffer-to-string FileExists? }T -1 ==
 T{ FITSfilepath buffer-to-string FileExists? }T -1 ==
+T{ save-XISFimage save-FITSimage }T ==
 Tend
 
 science.test.saved-XISF-path TO-DO write-filepath-xisf
