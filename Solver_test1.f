@@ -35,10 +35,10 @@ Tstart
 
 T{ solver.test-metadata solver.alignment-FITS }T ==
 T{ s" 10UALPT" solver.test-metadata map@ nip 0> }T -1 ==
-T{ s" 10UALPT" solver.test-metadata map@ s\" s\" " search nip nip }T -1 ==
+T{ s" 10UALPT" solver.test-metadata map@ s\" s\" " search nip nip }T 0 ==
 T{ s" 10UALPT" solver.test-metadata map@
    s" add-alignment-point" search nip nip
-}T -1 ==
+}T 0 ==
 T{ s" 10UALPT" solver.test-metadata map@
    s" ,E," search nip nip
 }T -1 ==

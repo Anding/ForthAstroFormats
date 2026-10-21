@@ -92,7 +92,7 @@ ASSIGN no-solver TO-DO solve-image
 : solver.alignment-FITS { metadata |
     reported-ra reported-dec sidereal night-of
     solved-ra solved-dec pierside-addr pierside-u -- }
-\ Derive the 10Micron alignment command once from the completed solve context.
+\ Derive the comma-separated 10Micron alignment data from the completed solve context.
     s" OBJCTRA" metadata map@ ':' solver.alignment-number~ -> reported-ra
     s" OBJCTDEC" metadata map@ ':' solver.alignment-number~ -> reported-dec
     s" SIDEREAL" metadata map@ ':' solver.alignment-number~ -> sidereal
@@ -109,7 +109,7 @@ ASSIGN no-solver TO-DO solve-image
         >float 0= abort" Invalid alignment CRVAL2"
         fp~ -> solved-dec
 
-    s\" s\" " $-> solver.alignment-command
+    s" " $-> solver.alignment-command
     reported-ra reported-dec night-of JNOW swap
     solver.~RA$ $+> solver.alignment-command
     s" ," $+> solver.alignment-command
@@ -124,6 +124,5 @@ ASSIGN no-solver TO-DO solve-image
     solver.~Dec$ $+> solver.alignment-command
     s" ," $+> solver.alignment-command
     sidereal solver.~RA$ $+> solver.alignment-command
-    s\" \" add-alignment-point" $+> solver.alignment-command
     solver.alignment-command metadata =>" 10UALPT"
 ;
