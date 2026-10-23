@@ -4,6 +4,12 @@ Forth package to read and write the XISF file format used by PixInsight.
 
 https://pixinsight.com/doc/docs/XISF-1.0-spec/XISF-1.0-spec.html
 
+XISF files use a fixed 8,192-byte header block; pixel attachments always start
+at byte 8,192. The 16-byte binary prefix contains `XISF0100`, the actual XML
+byte count as a little-endian 32-bit integer, and four zero reserved bytes.
+Unused space between the XML and the attachment is zero padding.
+`XISF_load_test1.f` checks the serialized prefix and pixel round trip.
+
 ## Image context
 
 `IMAGE_CONTEXT` is the shared image representation used by XISF, FITS,

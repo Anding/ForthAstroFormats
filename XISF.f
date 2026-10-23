@@ -22,9 +22,11 @@ XISF_HEADER_SIZE allocate-buffer constant xisf.header-buffer
 
 : XISF.encode-header { frame header-buffer -- }
 \ The attachment offset written into XML must remain equal to the exact fixed
-\ header size emitted by save-XISFimage-to.
+\ header size emitted by save-XISFimage-to. The binary prefix records only
+\ the XML byte count; the remaining fixed-block padding stays zero.
     header-buffer reset-buffer
-    s" XISF010000000000" header-buffer write-buffer abort" XISF header buffer full"
+    s" XISF0100" header-buffer write-buffer abort" XISF header buffer full"
+    8 header-buffer BUFFER_POINTER +! \ Zeroed length and reserved fields.
     header-buffer xml.<??>
     s" xisf" header-buffer xml.<tag
         s" version" s" 1.0" header-buffer xml.keyval
@@ -45,6 +47,7 @@ XISF_HEADER_SIZE allocate-buffer constant xisf.header-buffer
     frame FRAME_METADATA @ dup if header-buffer XISF.write-map-XISF else drop then
     s" Image" header-buffer xml.</tag>
     s" xisf" header-buffer xml.</tag>
+    header-buffer buffer_used 16 - header-buffer BUFFER_ADDR 8 + !
 ;
 
 : save-XISFimage-to { frame filepath-buffer | fileid -- }
