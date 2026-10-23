@@ -54,14 +54,13 @@ after a completed temporary manifest exists.
 
 ## Output pathname policy
 
-`ForthAstroFormats` provides replaceable complete-path composers:
+`Paths.f` provides generic path helpers, retained writer paths and replaceable
+complete-path interfaces. It does not choose an application naming scheme.
 
-```forth
-s" E:\images" $value astro.root
-```
-
-The formats package owns this global root; an observatory environment may
-replace it with `$-> astro.root`.
+`astro.root` is shared pathname storage, initially empty. Imaging policy in
+AstroImagingInForth's `capabilities\ImagePaths.f` sets the default root to
+`E:\images` and assigns the writers' deferred actions. An observatory may
+replace the root with `$-> astro.root`.
 
 ```forth
 write-filepath-bmp                ( frame caddr u filepath-buffer -- )
@@ -76,9 +75,16 @@ write-filepath-wcs                ( frame caddr u filepath-buffer -- )
 ```
 
 Each writer owns its dedicated deferred pathname creator, retained filepath
-buffer, extension, and file I/O. Defaults are assigned when the formats
-library loads, so ordinary orchestration only invokes the zero-argument
-writers:
+buffer, extension, and file I/O. Standalone Formats use must assign the
+required pathname actions or use explicit `*-to` writers with prepared paths.
+Unconfigured pathname actions abort explicitly. Applications wanting the
+imaging naming scheme can load it without equipment:
+
+```forth
+NEED AstroImagePaths
+```
+
+After policy is installed, ordinary orchestration invokes zero-argument writers.
 
 Complete-path composers must call `buffer-punctuate-filepath` after the
 folder and before the filename. Directory creation rejects buffers without
@@ -98,15 +104,14 @@ Missing, empty, or short UUIDs omit the entire science filename suffix.
 Existing science files may be overwritten. UUID-based working directories
 are unchanged.
 
-`solver.alignment-FITS` rejects missing or unparseable required alignment
-inputs before producing a mount command. Coordinates and sidereal time use
-three colon-separated fields, `NIGHTOF` accepts `YYYY-MM-DD` or the existing
-numeric date representation, `PIERSIDE` is
-`EAST` or `WEST`, and both solved CRVAL fields must parse as floating point.
+10Micron-specific `solver.alignment-FITS` and its regression have moved to
+AstroImagingInForth's `MountAlignment` vocabulary. Formats `Solver.f` retains
+generic solver dispatch and WCS import.
 
-`NEED ForthPublication` loads the generic UUID-path and manifest record words.
-It owns binary output, manifest publication, and atomic replacement mechanics.
-`NEED ForthPreview` loads the stretched-BMP and histogram writers.
+`Publication.f` consolidates preview/histogram writers, FITS-map projections,
+binary output and manifests. `AtomicFile.f` supplies the native replacement
+primitive; `Paths.f` owns generic pathname mechanics. `NEED ForthPublication`,
+`NEED FITS_projection` and `NEED ForthPreview` remain supported loader names.
 
 VFXterm is a 32-bit process and must be able to load the Win32 Release
 `XISF.dll`. Deploy
@@ -117,7 +122,7 @@ native call; `FITS_projection_test1.f` verifies the atomic replacement path.
 ## Preview BMP output
 
 ```forth
-save-BMPimage ( img bitmap filepath-buffer -- )
+save-BMPimage-to ( img bitmap filepath-buffer -- )
 ```
 
 The native writer saves an 8-bit, top-down grayscale BMP from the high byte of
@@ -130,6 +135,7 @@ ForthBase filepath buffer.
 It verifies ordered projection bytes, atomic replacement and source removal,
 without hardware.
 `Metadata_test1.f` checks serializer order, replacements, empty values, and
-FITS long-key omission. `Frame_test1.f`, `Paths_test1.f`, and
-`Solver_test1.f` cover per-exposure erasure, optional UUID suffixes, and
-rejection of missing or malformed alignment inputs, respectively.
+FITS long-key omission. `Frame_test1.f` covers per-exposure erasure;
+`Paths_test1.f` covers explicit failure for unconfigured pathname actions.
+Application naming and alignment regressions now live in AstroImagingInForth
+as `tests\regression\ImagePaths.f` and `tests\regression\MountAlignment.f`.

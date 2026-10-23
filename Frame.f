@@ -8,7 +8,6 @@ NEED Shared
 
 0 shared value image
 
-256 constant FILEPATH_SIZE
 
 BEGIN-STRUCTURE FRAME
                 4   +FIELD FRAME_WIDTH
@@ -70,41 +69,4 @@ FRAME constant FRAME_DESCRIPTOR
     x frame FRAME_WIDTH !
     y frame FRAME_HEIGHT !
     x y * 2 * frame FRAME_SIZE_BYTES !
-;
-
-: IsFITSnumchar? ( c -- flag )
-    >R 0
-    R@ '+' = OR
-    R@ '-' = OR
-    R@ '.' = OR
-    R@ 'E' = OR
-    R@ 'e' = OR
-    R> '0' '9' within? OR
-;
-
-s" " $value FITSstringBuf
-
-: StrToFITSStr ( caddr u -- caddr u )
-    dup 0= if 2drop s" ''" exit then
-    2dup -1 -rot over + swap do i c@ IsFITSnumchar? and dup 0= if leave then loop
-    0= if
-        s" '" $-> FITSstringBuf $+> FITSstringBuf s" '" $+> FITSstringBuf FITSstringBuf
-    then
-;
-
-: FITSstrToStr ( caddr u -- caddr u )
-    dup if over c@ ''' = if 2 - swap 1 + swap then then
-;
-
-: valid-filepath-folder? { filepath-buffer | folder-u -- flag }
-\ Require a drive prefix and a recorded folder wholly inside the used buffer.
-    filepath-buffer BUFFER_LEN_DIR @ -> folder-u
-    folder-u 3 >=
-    folder-u filepath-buffer buffer_used <= and
-;
-
-: create-imageDirectory ( filepath-buffer -- )
-    dup valid-filepath-folder? 0= abort" Filepath folder not punctuated"
-    >R
-    R@ buffer-drive-to-string R> buffer-dir-to-string makeDirLevels abort" cannot create image directory"
 ;
