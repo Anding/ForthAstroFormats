@@ -39,7 +39,9 @@ test-frame initialize-frame
 T{ test-frame frame-size }T 8 4 * 2 * ==
 T{ test-frame frame-capacity }T 16 8 * 2 * ==
 
+32 allocate throw test-frame FRAME_PIPELINE !
+64 allocate throw test-frame FRAME_STARS !
+T{ test-frame free-frame }T ==
 Tend
 
-test-frame free-frame
 test-filepath free-buffer

@@ -8,23 +8,27 @@ TSlength buffer: xisf.TSstring
 \ the camera driver does not know - this must be set manually or by script
 0 value image_type
 
-: add-observationFITS ( map --)
-\ add key value pairs for FITS observation parameters
+: add-startFITS ( map -- )
 	>R
 	s"  "                                   R@ =>" #OBS"            \ a header to indicate the source of these FITS values	
- 	obs.type observationType                R@ =>" IMAGETYP"	
-	obs.target                              R@ =>" TARGET"
-	0 0                                     R@ =>" OBJECT"
 	xisf.TSstring 0 make-timestamp          R@ =>" DATE-OBS"        \ UTC date and time in ISO format
 	xisf.TSstring 1 make-timestamp          R@ =>" LOCAL-DT"        \ local date and time in ISO format
 	xisf.TSstring 3 make-timestamp drop 10  R@ =>" NIGHTOF"         \ local date in midday to midday format
- 	obs.observer                            R@ =>" OBSERVER"			
  	UUID                                    R@ =>" UUID"											
 	R> drop
 ;	
 
+: add-observationFITS ( map -- )
+    >R
+    obs.type observationType R@ =>" IMAGETYP"
+    obs.target R@ =>" TARGET"
+    0 0 R@ =>" OBJECT"
+    obs.observer R@ =>" OBSERVER"
+    R> drop
+;
+
 : add-observationEndFITS ( map --)
-\ Record the UTC completion timestamp after image download and processing.
+\ Record the UTC completion timestamp immediately after image download.
     >R
     xisf.TSstring 0 make-timestamp R@ =>" DATE-END"
     R> drop

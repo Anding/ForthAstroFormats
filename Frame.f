@@ -17,13 +17,16 @@ BEGIN-STRUCTURE FRAME
                 4   +FIELD FRAME_CAPACITY_BYTES
                 4   +FIELD FRAME_METADATA
                 4   +FIELD FRAME_STATISTICS
+                4   +FIELD FRAME_PIPELINE
+                4   +FIELD FRAME_STARS
                 0   +FIELD FRAME_BITMAP
 END-STRUCTURE
 
 FRAME constant FRAME_DESCRIPTOR
 \ The descriptor and 16-bit pixel planes occupy one allocation. Metadata is a
 \ separately owned ordered map; statistics is either zero or an owned analysis
-\ allocation. free-frame releases all three ownership layers.
+\ allocation. Pipeline state and star measurements are optional owned blocks;
+\ their layouts belong to the imaging and analysis vocabularies.
 
 : allocate-frame { width height depth | bytes frame -- frame }
 \ depth is the number of 16-bit planes. FRAME_BITMAP begins immediately after
@@ -38,12 +41,16 @@ FRAME constant FRAME_DESCRIPTOR
     frame FRAME_BITMAP bytes erase
     allocate-map frame FRAME_METADATA !
     0 frame FRAME_STATISTICS !
+    0 frame FRAME_PIPELINE !
+    0 frame FRAME_STARS !
     frame
 ;
 
 : free-frame ( frame -- )
     dup FRAME_METADATA @ ?dup if free-map then
     dup FRAME_STATISTICS @ ?dup if free drop then
+    dup FRAME_PIPELINE @ ?dup if free throw then
+    dup FRAME_STARS @ ?dup if free throw then
     free drop
 ;
 

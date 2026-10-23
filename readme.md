@@ -11,12 +11,20 @@ preview, analysis, and solver code. `IMAGE_DESCRIPTOR` remains an alias for
 compatibility with existing callers.
 
 The context owns dimensions, pixel data, a `FITS_MAP`, and image statistics.
+`FRAME_PIPELINE` and `FRAME_STARS` are optional owned allocation pointers,
+initialized to zero; their layouts belong to the imaging and analysis layers.
+`free-frame` releases them along with metadata, statistics and the bitmap.
 Writers retain their own output paths and update or project the existing
 ordered FITS map rather than maintaining separate metadata objects.
 Metadata uses ForthBase `ordered-maps`: `allocate-map`/`free-map`, `map!`,
 `map@`, `map-count`, and insertion-ordered `map-for-each`. Missing and empty
 values both read as `( 0 0 )`. `reset-frame-metadata` uses `erase-map` to
 forget all per-exposure keys; `reset-map` instead retains keys and order.
+
+`add-startFITS ( map -- )` records mandatory start timestamps and UUID;
+`add-observationEndFITS ( map -- )` records `DATE-END` immediately after
+download. `add-observationFITS` separately supplies optional observation
+identity, target and observer information.
 
 ## FITS projection and publication
 
