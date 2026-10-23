@@ -42,12 +42,9 @@ output file, projection totals the required bytes with a `map-for-each`
 accumulator and rejects oversized metadata. Serializer callbacks consume
 the supplied key and value strings directly.
 
-For fault isolation, enable `LOG-ON` and `-1 -> FITS.projection-debug`.
-The `fits-projection` channel records each key, value length and hexadecimal
-bytes, plus file creation, allocation, iteration, write, free and close
-boundaries. Detailed projection logging is off by default and follows
-`log.directory`. `FITS_projection_test2.f` covers empty values, zero, NUL,
-control bytes and maximum-length counted values without hardware.
+`FITS_projection_test2.f` covers empty values, zero, NUL, control bytes and
+maximum-length counted values without hardware. Projection errors abort
+explicitly; there is no projection logger.
 
 `replace-file-atomically` expects ForthBase buffer descriptors containing
 source and destination paths. It temporarily appends the required NUL

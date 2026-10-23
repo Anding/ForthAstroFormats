@@ -53,14 +53,6 @@ T{ projection.bad-zero 1 projection.bad-check }T -1 ==
 T{ projection.bad-controls 3 projection.bad-check }T -1 ==
 projection.bad-fill
 T{ projection.bad-bytes 255 projection.bad-check }T -1 ==
-s" E:\" s" images\logs\projection-regression" makeDirLevels throw
-s" E:\images\logs\projection-regression" $-> log.directory
-LOG-ON
--1 -> FITS.projection-debug
-T{ projection.bad-bytes 255 projection.bad-check }T -1 ==
-T{ projection.bad-zero 1 projection.bad-check }T -1 ==
-T{ 0 0 projection.bad-check }T -1 ==
-0 -> FITS.projection-debug
 T{ ' projection.bad-overflow catch }T -2 ==
 T{ ' projection.bad-save-overflow catch }T -2 ==
 T{ depth }T 0 ==

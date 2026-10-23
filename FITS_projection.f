@@ -2,42 +2,10 @@
 
 NEED ForthAstroFormats
 NEED ForthPublication
-NEED ForthVT100
 
 16384 constant FITS_PROJECTION_SIZE
 
-0 value FITS.projection-debug
-1024 allocate-buffer constant FITS.projection-log-buffer
-
-: FITS.projection-log ( caddr u -- )
-    FITS.projection-debug if
-        s" fits-projection" 2swap log-line
-    else
-        2drop
-    then
-;
-
-: FITS.projection-log-item { key-addr key-u value-addr value-u | buf -- }
-    FITS.projection-debug LOG and 0= if exit then
-    FITS.projection-log-buffer -> buf
-    buf reset-buffer
-    key-addr key-u buf write-buffer abort" Projection log buffer full"
-    s"  length=" buf write-buffer abort" Projection log buffer full"
-    value-u (.) buf write-buffer abort" Projection log buffer full"
-    s"  bytes=" buf write-buffer abort" Projection log buffer full"
-    value-u 0 ?do
-        value-addr i + c@ 16 /mod
-        s" 0123456789ABCDEF" drop + c@
-        buf echo-buffer abort" Projection log buffer full"
-        s" 0123456789ABCDEF" drop + c@
-        buf echo-buffer abort" Projection log buffer full"
-    loop
-    buf buffer-to-string FITS.projection-log
-;
-
 : XISF.mapIterProjection { buf key-addr key-u value-addr value-u -- buf }
-    key-addr key-u FITS.projection-log
-    key-addr key-u value-addr value-u FITS.projection-log-item
     key-addr key-u buf write-buffer abort" FITS projection buffer full"
     9 buf echo-buffer abort" FITS projection buffer full"
     value-addr value-u buf write-buffer abort" FITS projection buffer full"
@@ -62,20 +30,13 @@ NEED ForthVT100
     map FITS.projection-size FITS_PROJECTION_SIZE >
         abort" FITS projection buffer full"
     filepath-buffer create-imageDirectory
-    s" create-file start" FITS.projection-log
     filepath-buffer buffer-to-string w/o
         create-file abort" Cannot create FITS projection" -> fileid
-    s" allocate start" FITS.projection-log
     FITS_PROJECTION_SIZE allocate-buffer -> projection-buffer
-    s" iteration start" FITS.projection-log
     projection-buffer ['] XISF.mapIterProjection map map-for-each drop
-    s" write start" FITS.projection-log
     projection-buffer fileid buffer-to-file
-    s" free start" FITS.projection-log
     projection-buffer free-buffer
-    s" close start" FITS.projection-log
     fileid close-file abort" Cannot close FITS projection"
-    s" projection complete" FITS.projection-log
 ;
 
 : save-FITSprojection ( -- )
