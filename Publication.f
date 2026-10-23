@@ -65,14 +65,27 @@ NEED ForthAtomicFile
 ;
 
 : no-preview-manifest-extension ( fileid -- )
+\ Default extension action: append no additional manifest records.
     drop
 ;
 
+\ Optional ( fileid -- ) action; append records without closing the manifest.
 DEFER write-preview-manifest-extension ( fileid -- )
 ASSIGN no-preview-manifest-extension TO-DO write-preview-manifest-extension
 
 : publish-preview-manifest { preview? histogram? | fileid -- }
-\ Atomically publish the paths of the selected preview artifacts.
+\ Atomically publish selected artifacts which exist for the current frame.
+\ Resolve every selected path afresh; shared buffers may refer to an older frame.
+    preview? if
+        image s" .bmp" preview-BMPfilepath write-filepath-bmp
+        image s" .bmp" stretched-BMPfilepath write-filepath-stretched-bmp
+        preview-BMPfilepath buffer-to-string FileExists?
+        stretched-BMPfilepath buffer-to-string FileExists? and -> preview?
+    then
+    histogram? if
+        image s" .bin" histogram-filepath write-filepath-histogram
+        histogram-filepath buffer-to-string FileExists? -> histogram?
+    then
     image s" .dat" preview-manifest-filepath
         write-filepath-preview-manifest
     image s" .tmp" preview-manifest-tmp-filepath
@@ -116,9 +129,10 @@ ASSIGN no-preview-manifest-extension TO-DO write-preview-manifest-extension
         replace-file-atomically
 ;
 
-16384 constant FITS_PROJECTION_SIZE
+16384 constant FITS_PROJECTION_SIZE \ Maximum allocated FITS projection bytes.
 
 : XISF.mapIterProjection { buf key-addr key-u value-addr value-u -- buf }
+\ Append one tab-separated map entry to the retained projection buffer.
     key-addr key-u buf write-buffer abort" FITS projection buffer full"
     9 buf echo-buffer abort" FITS projection buffer full"
     value-addr value-u buf write-buffer abort" FITS projection buffer full"
@@ -128,6 +142,7 @@ ASSIGN no-preview-manifest-extension TO-DO write-preview-manifest-extension
 ;
 
 : FITS.projection-item-size { total key-addr key-u value-addr value-u -- total' }
+\ Add one entry's key/value lengths and separators to the running byte count.
     total key-u + value-u + 3 +
 ;
 
@@ -165,7 +180,7 @@ ASSIGN no-preview-manifest-extension TO-DO write-preview-manifest-extension
 ;
 
 : save-stretched-BMPimage { | bitmap ior -- }
-\ Apply the display function and save the resulting high-byte BMP.
+\ Apply the display function, save the high-byte BMP and publish available artifacts.
     image frame-size allocate abort" Cannot allocate stretched bitmap"
         -> bitmap
     image bitmap apply-displayFunction-to
@@ -173,11 +188,13 @@ ASSIGN no-preview-manifest-extension TO-DO write-preview-manifest-extension
     image bitmap stretched-BMPfilepath ['] save-BMPimage-to catch -> ior
     bitmap free abort" Cannot free stretched bitmap"
     ior ?dup if throw then
+    -1 -1 publish-preview-manifest
 ;
 
 : save-Histogram ( -- )
-\ Save the current image histogram as 65,536 four-byte bins.
+\ Save 65,536 four-byte bins and independently publish available preview artifacts.
     image s" .bin" histogram-filepath write-filepath-histogram
     image FRAME_STATISTICS @ HISTOGRAM 0x40000 histogram-filepath
         save-binary-file-to
+    -1 -1 publish-preview-manifest
 ;
