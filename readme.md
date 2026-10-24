@@ -32,6 +32,11 @@ forget all per-exposure keys; `reset-map` instead retains keys and order.
 download. `add-observationFITS` separately supplies optional observation
 identity, target and observer information.
 
+The unheaded `BITPIX` through `EXPOINMS` block is reserved first and filled
+by camera metadata. `#IDENTITY` then groups `DATE-OBS` through `OBSERVER`,
+with an initially empty `DATE-END` immediately after `DATE-OBS`. Solver WCS
+import starts `#ASTROMETRY`, grouping the solution through `10UALPT`.
+
 ## FITS projection and publication
 
 Load the projection vocabulary through the ForthBase manifest:

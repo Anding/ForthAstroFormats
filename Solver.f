@@ -20,6 +20,7 @@ ASSIGN drop TO-DO solver.solved-metadata
 \ Merge ordinary WCS FITS cards into the frame's ordered metadata.
     img FRAME_METADATA @ -> metadata
     caddr u r/o open-file abort" Cannot open solver WCS file" -> fileid
+    s"  " metadata =>" #ASTROMETRY"
     begin
         solver.wcs-line 255 fileid read-line
             abort" Cannot read solver WCS file"

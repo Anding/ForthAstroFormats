@@ -9,8 +9,23 @@ TSlength buffer: xisf.TSstring
 0 value image_type
 
 : add-startFITS ( map -- )
+\ Reserve the unheaded camera prefix before observation identity; camera metadata fills it.
 	>R
-	s"  "                                   R@ =>" #OBS"            \ a header to indicate the source of these FITS values	
+	0 0                                    R@ =>" BITPIX"
+	0 0                                    R@ =>" NAXIS"
+	0 0                                    R@ =>" NAXIS1"
+	0 0                                    R@ =>" NAXIS2"
+	0 0                                    R@ =>" XORGSUBF"
+	0 0                                    R@ =>" YORGSUBF"
+	0 0                                    R@ =>" BZERO"
+	0 0                                    R@ =>" BSCALE"
+	0 0                                    R@ =>" XBINNING"
+	0 0                                    R@ =>" YBINNING"
+	0 0                                    R@ =>" PEDESTAL"
+	0 0                                    R@ =>" EXPTIME"
+	0 0                                    R@ =>" EXPOINUS"
+	0 0                                    R@ =>" EXPOINMS"
+	s"  "                                   R@ =>" #IDENTITY"
 	xisf.TSstring 0 make-timestamp          R@ =>" DATE-OBS"        \ UTC date and time in ISO format
 	0 0                                   R@ =>" DATE-END"
 	xisf.TSstring 1 make-timestamp          R@ =>" LOCAL-DT"        \ local date and time in ISO format
