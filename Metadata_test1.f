@@ -31,6 +31,19 @@ T{ metadata.test-map metadata.test-buffer XISF.write-map-XISF
    metadata.test-buffer buffer-to-string hashS
 }T metadata.test-expected buffer-to-string hashS ==
 T{ 0 0 FITSstrToStr }T 0 0 ==
+
+metadata.test-map erase-map
+metadata.test-map add-startFITS
+metadata.test-buffer reset-buffer
+metadata.test-map metadata.test-buffer FITS.write-map
+T{ metadata.test-buffer BUFFER_ADDR 80 + 8 s" DATE-OBS" compare }T 0 ==
+T{ metadata.test-buffer BUFFER_ADDR 160 + 8 s" DATE-END" compare }T 0 ==
+T{ metadata.test-buffer BUFFER_ADDR 170 + 2 s" ''" compare }T 0 ==
+metadata.test-map add-observationEndFITS
+metadata.test-buffer reset-buffer
+metadata.test-map metadata.test-buffer FITS.write-map
+T{ metadata.test-buffer BUFFER_ADDR 160 + 8 s" DATE-END" compare }T 0 ==
+T{ s" DATE-END" metadata.test-map map@ nip 0> }T true ==
 Tend
 
 metadata.test-map free-map
