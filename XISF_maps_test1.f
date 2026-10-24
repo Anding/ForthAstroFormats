@@ -1,10 +1,8 @@
-\ test for XISF_map
+\ Historical metadata demo; requires the retired add-observationXISF vocabulary.
 
 NEED windows
 
-include "%idir%\properties_obs.f"
-include "%idir%\properties_rig.f"
-include "%idir%\XISF_maps.f"
+NEED ForthAstroFormats
 
 NEED ordered-maps
 allocate-map CONSTANT FITSmap

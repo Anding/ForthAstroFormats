@@ -12,13 +12,23 @@ Unused space between the XML and the attachment is zero padding.
 
 ## Image context
 
+`ForthAstroFormats.f` owns the package's ordered includes. Existing public
+`NEED` aliases reach that one entry. Formats does not load ImageAnalysis.
+`ObservationMetadata.f` owns observation values and timestamp/identity
+producers; `RigMetadata.f` owns optical/software values and `add-rigFITS`.
+These vocabularies are shared by FITS and XISF, not owned by either codec.
+`Frame.f` owns `frame.allocate-like`; `AtomicFile.f` owns descriptor-safe
+atomic replacement. The application pipeline owns display-stretched previews.
+`Solver.f` owns common private FITS paths and temporary writer restoration;
+engine invocation and engine identity remain in the solver repositories.
+
 `IMAGE_CONTEXT` is the shared image representation used by XISF, FITS,
 preview, analysis, and solver code. `IMAGE_DESCRIPTOR` remains an alias for
 compatibility with existing callers.
 
-The context owns dimensions, pixel data, a `FITS_MAP`, and image statistics.
-`FRAME_PIPELINE` and `FRAME_STARS` are optional owned allocation pointers,
-initialized to zero; their layouts belong to the imaging and analysis layers.
+The context owns dimensions, pixel data, a `FITS_MAP`, image statistics and
+the initially empty star list. `FRAME_PIPELINE` is an optional owned allocation
+pointer, initialized to zero; its layout belongs to the imaging layer.
 `free-frame` releases them along with metadata, statistics and the bitmap.
 Writers retain their own output paths and update or project the existing
 ordered FITS map rather than maintaining separate metadata objects.

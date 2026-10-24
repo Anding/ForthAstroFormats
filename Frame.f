@@ -94,6 +94,12 @@ FRAME constant FRAME_DESCRIPTOR
     free drop
 ;
 
+: frame.allocate-like { frame | new-frame -- new-frame }
+\ Allocate matching geometry with independent pixel, metadata and analysis storage.
+    frame FRAME_WIDTH @ frame FRAME_HEIGHT @ frame FRAME_DEPTH @ allocate-frame -> new-frame
+    new-frame
+;
+
 : reset-frame-metadata ( frame -- )
     FRAME_METADATA @ erase-map
 ;

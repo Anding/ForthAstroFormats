@@ -38,22 +38,6 @@ NEED ForthAtomicFile
     s\" \"\r\n" fileid write-file abort" Cannot write manifest"
 ;
 
-: replace-file-atomically
-    { source-buffer destination-buffer | replaced? -- }
-\ Replace a visible publication only after its temporary file is complete.
-    0 source-buffer echo-buffer abort" Publication source path buffer full"
-    0 destination-buffer echo-buffer abort" Publication destination path buffer full"
-    10 0 do
-        source-buffer buffer-to-string drop
-        destination-buffer buffer-to-string drop
-        ReplaceFileAtomic 0= if -1 -> replaced? leave then
-        100 ms
-    loop
-    source-buffer backspace-buffer abort" Cannot restore publication source path"
-    destination-buffer backspace-buffer abort" Cannot restore publication destination path"
-    replaced? 0= abort" Cannot replace publication manifest"
-;
-
 : save-binary-file-to
     { data-addr data-u filepath-buffer | fileid -- }
 \ Save one binary artifact to an explicitly prepared pathname.
@@ -177,18 +161,6 @@ ASSIGN no-preview-manifest-extension TO-DO write-preview-manifest-extension
 \ Save the current frame's WCS sidecar through its dedicated writer.
     image s" .wcs" WCSfilepath write-filepath-wcs
     image WCSfilepath save-FITSprojection-to
-;
-
-: save-stretched-BMPimage { | bitmap ior -- }
-\ Apply the display function, save the high-byte BMP and publish available artifacts.
-    image frame-size allocate abort" Cannot allocate stretched bitmap"
-        -> bitmap
-    image bitmap apply-displayFunction-to
-    image s" .bmp" stretched-BMPfilepath write-filepath-stretched-bmp
-    image bitmap stretched-BMPfilepath ['] save-BMPimage-to catch -> ior
-    bitmap free abort" Cannot free stretched bitmap"
-    ior ?dup if throw then
-    -1 -1 publish-preview-manifest
 ;
 
 : save-Histogram ( -- )
