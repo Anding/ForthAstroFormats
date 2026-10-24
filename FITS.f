@@ -125,7 +125,7 @@ END-CODE
     frame filepath-buffer save-FITSimage-to
 ;
 
-: save-FITSimage ( -- )
-\ Save the current frame and retain its resulting FITS pathname.
-    image FITSfilepath save-FITSframe-to
+: save-FITSimage ( frame -- )
+\ Save the supplied frame and retain its resulting FITS pathname.
+    FITSfilepath save-FITSframe-to
 ;

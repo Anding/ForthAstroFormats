@@ -3,7 +3,6 @@ need simple-tester
 
 4096 buffer: buf1
 4096 buffer: buf2
-0 shared value image
 
 cr
 Tstart
@@ -41,8 +40,8 @@ T{ s" E:\testdata\images\LUM-E8-F5100-12365844e78a.fits" test.XISF.scan-FITSgeom
 ;
 
 T{ test.reverseConvertDataFITS buf1 4096 hashS }T buf2 4096 2dup reverseConvertDataFITS hashS ==
-T{ s" E:\coding\ForthAstroFormats\testdata\test1.fits" xisf.load-FITSfile swap -> image }T 0 ==
-T{ s" E:\testdata\images\LUM-E8-F5100-12365844e78a.fits" xisf.load-FITSfile swap -> image }T 0 ==
+T{ s" E:\coding\ForthAstroFormats\testdata\test1.fits" xisf.load-FITSfile swap free-frame }T 0 ==
+T{ s" E:\testdata\images\LUM-E8-F5100-12365844e78a.fits" xisf.load-FITSfile swap free-frame }T 0 ==
 CR
 Tend
 CR

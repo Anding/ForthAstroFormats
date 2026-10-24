@@ -22,9 +22,9 @@ atomic replacement. The application pipeline owns display-stretched previews.
 `Solver.f` owns common private FITS paths and temporary writer restoration;
 engine invocation and engine identity remain in the solver repositories.
 
-`IMAGE_CONTEXT` is the shared image representation used by XISF, FITS,
-preview, analysis, and solver code. `IMAGE_DESCRIPTOR` remains an alias for
-compatibility with existing callers.
+`FRAME` is the image representation used by XISF, FITS, preview, analysis,
+and solver code. Operations receive an explicit frame address; there is no
+global current `image`.
 
 The context owns dimensions, pixel data, a `FITS_MAP`, image statistics and
 the initially empty star list. `FRAME_PIPELINE` is an optional owned allocation
@@ -58,12 +58,12 @@ NEED FITS_projection
 The public words are:
 
 ```forth
-save-FITSprojection    ( -- )
+save-FITSprojection    ( frame -- )
 save-FITSprojection-to ( img filepath-buffer -- )
 replace-file-atomically ( source-buffer destination-buffer -- )
 ```
 
-`save-FITSprojection` writes the shared current image through its dedicated
+`save-FITSprojection` writes the supplied frame through its dedicated
 pathname policy and retains the resulting path. `save-FITSprojection-to` is
 the explicit low-level form. Both write the ordered FITS map as UTF-8
 `key<TAB>value<CRLF>` lines through an in-memory buffer. Before opening the
@@ -113,15 +113,15 @@ imaging naming scheme can load it without equipment:
 NEED AstroImagePaths
 ```
 
-After policy is installed, ordinary orchestration invokes zero-argument writers.
+After policy is installed, ordinary orchestration passes its frame to each writer.
 
 Complete-path composers must call `buffer-punctuate-filepath` after the
 folder and before the filename. Directory creation rejects buffers without
 that recorded boundary rather than passing an invalid length to Windows.
 
 ```forth
-save-XISFimage
-save-FITSimage
+frame save-XISFimage
+frame save-FITSimage
 ```
 
 A private solver temporarily replaces only `write-filepath-fits`, calls
@@ -143,6 +143,16 @@ MountAlignment binds it to add `10UALPT` after every successful frame solve.
 binary output and manifests. `AtomicFile.f` supplies the native replacement
 primitive; `Paths.f` owns generic pathname mechanics. `NEED ForthPublication`,
 `NEED FITS_projection` and `NEED ForthPreview` remain supported loader names.
+
+Preview and metadata publication also receive the frame explicitly:
+
+```forth
+save-Histogram            ( frame -- )
+save-BMPimage             ( frame -- )
+save-WCSprojection        ( frame -- )
+publish-preview-manifest  ( frame preview? histogram? -- )
+publish-metadata-manifest ( frame -- )
+```
 
 VFXterm is a 32-bit process and must be able to load the Win32 Release
 `XISF.dll`. Deploy

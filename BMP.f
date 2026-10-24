@@ -13,8 +13,8 @@
     ior abort" Error writing BMP file"
 ;
 
-: save-BMPimage ( -- )
-\ Save the current frame through the normal preview BMP writer.
-    image s" .bmp" preview-BMPfilepath write-filepath-bmp
-    image image FRAME_BITMAP preview-BMPfilepath save-BMPimage-to
+: save-BMPimage { frame -- }
+\ Save the supplied frame through the normal preview BMP writer.
+    frame s" .bmp" preview-BMPfilepath write-filepath-bmp
+    frame frame FRAME_BITMAP preview-BMPfilepath save-BMPimage-to
 ;

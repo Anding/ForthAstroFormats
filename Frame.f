@@ -4,10 +4,6 @@ NEED ForthBase
 NEED FiniteFractions
 NEED buffers
 NEED ordered-maps
-NEED Shared
-
-0 shared value image
-
 BEGIN-STRUCTURE <FRAME_STATISTICS>
     0x40000 +FIELD HISTOGRAM                    \ One cell per 16-bit sample value.
     0x40000 +FIELD HISTOGRAM_ABSOLUTE_DEVIATION

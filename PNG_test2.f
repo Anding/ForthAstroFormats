@@ -1,9 +1,7 @@
 need forthXISF
 include "%idir%\PNG.f"
 
-0 shared value image
-
-s" E:\testdata\images\LUM-E155-F5100-f7843758a3f5.xisf" xisf.load-file drop -> image
+s" E:\testdata\images\LUM-E155-F5100-f7843758a3f5.xisf" xisf.load-file drop constant png.test-frame
     
 : test_write-PNGfilepath { map buf -- }
 	s" E:\testdata\images\" buf write-buffer drop	
@@ -22,4 +20,4 @@ s" E:\testdata\images\LUM-E155-F5100-f7843758a3f5.xisf" xisf.load-file drop -> i
 
     ASSIGN test_write-PNGfilepath TO-DO write-PNGfilepath      
  
-    image save-PNGimage
+    png.test-frame save-PNGimage

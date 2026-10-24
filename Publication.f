@@ -57,22 +57,22 @@ NEED ForthAtomicFile
 DEFER write-preview-manifest-extension ( fileid -- )
 ASSIGN no-preview-manifest-extension TO-DO write-preview-manifest-extension
 
-: publish-preview-manifest { preview? histogram? | fileid -- }
-\ Atomically publish selected artifacts which exist for the current frame.
+: publish-preview-manifest { frame preview? histogram? | fileid -- }
+\ Atomically publish selected artifacts which exist for the supplied frame.
 \ Resolve every selected path afresh; shared buffers may refer to an older frame.
     preview? if
-        image s" .bmp" preview-BMPfilepath write-filepath-bmp
-        image s" .bmp" stretched-BMPfilepath write-filepath-stretched-bmp
+        frame s" .bmp" preview-BMPfilepath write-filepath-bmp
+        frame s" .bmp" stretched-BMPfilepath write-filepath-stretched-bmp
         preview-BMPfilepath buffer-to-string FileExists?
         stretched-BMPfilepath buffer-to-string FileExists? and -> preview?
     then
     histogram? if
-        image s" .bin" histogram-filepath write-filepath-histogram
+        frame s" .bin" histogram-filepath write-filepath-histogram
         histogram-filepath buffer-to-string FileExists? -> histogram?
     then
-    image s" .dat" preview-manifest-filepath
+    frame s" .dat" preview-manifest-filepath
         write-filepath-preview-manifest
-    image s" .tmp" preview-manifest-tmp-filepath
+    frame s" .tmp" preview-manifest-tmp-filepath
         write-filepath-preview-manifest
     preview-manifest-tmp-filepath open-publication-file -> fileid
     preview? if
@@ -85,9 +85,9 @@ ASSIGN no-preview-manifest-extension TO-DO write-preview-manifest-extension
         fileid s" histogram filepath" histogram-filepath
             write-path-manifest-line
     then
-    fileid s" image name" s" UUID" image FRAME_METADATA @ map@
+    fileid s" image name" s" UUID" frame FRAME_METADATA @ map@
         write-manifest-line
-    fileid s" time-stamp" s" DATE-END" image FRAME_METADATA @ map@
+    fileid s" time-stamp" s" DATE-END" frame FRAME_METADATA @ map@
         write-manifest-line
     fileid write-preview-manifest-extension
     fileid close-file abort" Cannot close manifest"
@@ -95,18 +95,18 @@ ASSIGN no-preview-manifest-extension TO-DO write-preview-manifest-extension
         replace-file-atomically
 ;
 
-: publish-metadata-manifest { | fileid -- }
-\ Atomically publish the current FITS-key projection path.
-    image s" .dat" metadata-manifest-filepath
+: publish-metadata-manifest { frame | fileid -- }
+\ Atomically publish the supplied frame's FITS-key projection path.
+    frame s" .dat" metadata-manifest-filepath
         write-filepath-metadata-manifest
-    image s" .tmp" metadata-manifest-tmp-filepath
+    frame s" .tmp" metadata-manifest-tmp-filepath
         write-filepath-metadata-manifest
     metadata-manifest-tmp-filepath open-publication-file -> fileid
     fileid s" fits keys filepath" FITSprojection-filepath
         write-path-manifest-line
-    fileid s" image name" s" UUID" image FRAME_METADATA @ map@
+    fileid s" image name" s" UUID" frame FRAME_METADATA @ map@
         write-manifest-line
-    fileid s" time-stamp" s" DATE-END" image FRAME_METADATA @ map@
+    fileid s" time-stamp" s" DATE-END" frame FRAME_METADATA @ map@
         write-manifest-line
     fileid close-file abort" Cannot close manifest"
     metadata-manifest-tmp-filepath metadata-manifest-filepath
@@ -151,22 +151,22 @@ ASSIGN no-preview-manifest-extension TO-DO write-preview-manifest-extension
     fileid close-file abort" Cannot close FITS projection"
 ;
 
-: save-FITSprojection ( -- )
-\ Save the current frame's viewer projection through its dedicated writer.
-    image s" .dat" FITSprojection-filepath write-filepath-fits-projection
-    image FITSprojection-filepath save-FITSprojection-to
+: save-FITSprojection { frame -- }
+\ Save the supplied frame's viewer projection through its dedicated writer.
+    frame s" .dat" FITSprojection-filepath write-filepath-fits-projection
+    frame FITSprojection-filepath save-FITSprojection-to
 ;
 
-: save-WCSprojection ( -- )
-\ Save the current frame's WCS sidecar through its dedicated writer.
-    image s" .wcs" WCSfilepath write-filepath-wcs
-    image WCSfilepath save-FITSprojection-to
+: save-WCSprojection { frame -- }
+\ Save the supplied frame's WCS sidecar through its dedicated writer.
+    frame s" .wcs" WCSfilepath write-filepath-wcs
+    frame WCSfilepath save-FITSprojection-to
 ;
 
-: save-Histogram ( -- )
+: save-Histogram { frame -- }
 \ Save 65,536 four-byte bins and independently publish available preview artifacts.
-    image s" .bin" histogram-filepath write-filepath-histogram
-    image FRAME_STATISTICS @ HISTOGRAM 0x40000 histogram-filepath
+    frame s" .bin" histogram-filepath write-filepath-histogram
+    frame FRAME_STATISTICS @ HISTOGRAM 0x40000 histogram-filepath
         save-binary-file-to
-    -1 -1 publish-preview-manifest
+    frame -1 -1 publish-preview-manifest
 ;

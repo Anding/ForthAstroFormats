@@ -67,7 +67,7 @@ XISF_HEADER_SIZE allocate-buffer constant xisf.header-buffer
     frame filepath-buffer save-XISFimage-to
 ;
 
-: save-XISFimage ( -- )
-\ Save the current frame and retain its resulting XISF pathname.
-    image XISFfilepath save-XISFframe-to
+: save-XISFimage ( frame -- )
+\ Save the supplied frame and retain its resulting XISF pathname.
+    XISFfilepath save-XISFframe-to
 ;
