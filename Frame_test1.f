@@ -7,7 +7,8 @@ FILEPATH_SIZE allocate-buffer constant test-filepath
 Tstart
 
 T{ test-frame FRAME_METADATA @ map-count }T 0 ==
-T{ test-frame FRAME_STATISTICS @ }T 0 ==
+T{ test-frame FRAME_STATISTICS @ 0<> }T -1 ==
+T{ test-frame FRAME_STATISTICS @ HISTOGRAM @ }T 0 ==
 T{ test-frame FRAME_STARS @ 0<> }T -1 ==
 T{ test-frame FRAME_STARS @ star.positive-pixel-count @ }T 0 ==
 T{ test-frame frame-size }T 16 8 * 2 * ==

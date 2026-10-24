@@ -8,6 +8,29 @@ NEED Shared
 
 0 shared value image
 
+BEGIN-STRUCTURE <FRAME_STATISTICS>
+    0x40000 +FIELD HISTOGRAM                    \ One cell per 16-bit sample value.
+    0x40000 +FIELD HISTOGRAM_ABSOLUTE_DEVIATION
+          4 +FIELD TOTAL_PIXELS
+          4 +FIELD MEAN
+          4 +FIELD MEDIAN
+          4 +FIELD MEDIAN_ABSOLUTE_DEVIATION
+          4 +FIELD df.B                         \ Display-function parameters.
+          4 +FIELD df.C
+          4 +FIELD df.MADN
+          4 +FIELD df.a
+          4 +FIELD df.t
+          4 +FIELD df.s
+          4 +FIELD df.h
+          4 +FIELD df.m
+END-STRUCTURE
+
+: allocate-frameStats ( -- imageStats )
+\ Allocate zeroed pixel-statistics storage; normally owned by a new frame.
+    <FRAME_STATISTICS> allocate abort" unable to allocate image statistics"
+    dup <FRAME_STATISTICS> erase
+;
+
 \ Native double-aligned StarRecord; keep offsets aligned with image_analysis.h.
 BEGIN-STRUCTURE StarRecord
     4 +FIELD star.positive-pixel-count \ Zero terminates the list.
@@ -40,9 +63,9 @@ END-STRUCTURE
 
 FRAME constant FRAME_DESCRIPTOR
 \ The descriptor and 16-bit pixel planes occupy one allocation. Metadata is a
-\ separately owned ordered map; statistics is either zero or an owned analysis
-\ allocation. Pipeline state is optional. Every frame owns storage for 256
-\ star measurements plus a terminator, initially an empty list.
+\ separately owned ordered map. Every frame owns zeroed statistics storage
+\ and room for 256 star measurements plus a terminator, initially empty.
+\ Pipeline state is optional.
 
 : allocate-frame { width height depth | bytes frame -- frame }
 \ depth is the number of 16-bit planes. FRAME_BITMAP begins immediately after
@@ -56,7 +79,7 @@ FRAME constant FRAME_DESCRIPTOR
     width frame FRAME_WIDTH !
     frame FRAME_BITMAP bytes erase
     allocate-map frame FRAME_METADATA !
-    0 frame FRAME_STATISTICS !
+    allocate-frameStats frame FRAME_STATISTICS !
     0 frame FRAME_PIPELINE !
     star-buffer-bytes allocate abort" unable to allocate star list"
     dup star-buffer-bytes erase frame FRAME_STARS !
@@ -65,7 +88,7 @@ FRAME constant FRAME_DESCRIPTOR
 
 : free-frame ( frame -- )
     dup FRAME_METADATA @ ?dup if free-map then
-    dup FRAME_STATISTICS @ ?dup if free drop then
+    dup FRAME_STATISTICS @ free drop
     dup FRAME_PIPELINE @ ?dup if free throw then
     dup FRAME_STARS @ free throw
     free drop
