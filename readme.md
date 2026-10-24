@@ -121,6 +121,8 @@ are unchanged.
 10Micron-specific `solver.alignment-FITS` and its regression have moved to
 AstroImagingInForth's `MountAlignment` vocabulary. Formats `Solver.f` retains
 generic solver dispatch and WCS import.
+Its `solver.solved-metadata ( metadata -- )` defer defaults to `drop`.
+MountAlignment binds it to add `10UALPT` after every successful frame solve.
 
 `Publication.f` consolidates preview/histogram writers, FITS-map projections,
 binary output and manifests. `AtomicFile.f` supplies the native replacement

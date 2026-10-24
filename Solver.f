@@ -12,6 +12,10 @@ NEED ForthAstroFormats
 DEFER solve-image ( img -- failed? )
 ASSIGN no-solver TO-DO solve-image
 
+DEFER solver.solved-metadata ( metadata -- )
+\ Add application metadata after a successful solve has imported its WCS.
+ASSIGN drop TO-DO solver.solved-metadata
+
 : solver.import-WCS { caddr u img | metadata fileid -- }
 \ Merge ordinary WCS FITS cards into the frame's ordered metadata.
     img FRAME_METADATA @ -> metadata
