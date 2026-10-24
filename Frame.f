@@ -8,6 +8,22 @@ NEED Shared
 
 0 shared value image
 
+\ Native double-aligned StarRecord; keep offsets aligned with image_analysis.h.
+BEGIN-STRUCTURE StarRecord
+    4 +FIELD star.positive-pixel-count \ Zero terminates the list.
+    4 +FIELD star.saturated-pixel-count
+    8 +FIELD star.x
+    8 +FIELD star.y
+    8 +FIELD star.flux
+    8 +FIELD star.hfd
+    8 +FIELD star.qxx
+    8 +FIELD star.qyy
+    8 +FIELD star.qxy
+    8 +FIELD star.max-pixel \ uint16_t followed by six alignment bytes; use W@.
+END-STRUCTURE
+
+256 constant maximum-stars
+maximum-stars 1+ StarRecord * constant star-buffer-bytes
 
 BEGIN-STRUCTURE FRAME
                 4   +FIELD FRAME_WIDTH
@@ -25,8 +41,8 @@ END-STRUCTURE
 FRAME constant FRAME_DESCRIPTOR
 \ The descriptor and 16-bit pixel planes occupy one allocation. Metadata is a
 \ separately owned ordered map; statistics is either zero or an owned analysis
-\ allocation. Pipeline state and star measurements are optional owned blocks;
-\ their layouts belong to the imaging and analysis vocabularies.
+\ allocation. Pipeline state is optional. Every frame owns storage for 256
+\ star measurements plus a terminator, initially an empty list.
 
 : allocate-frame { width height depth | bytes frame -- frame }
 \ depth is the number of 16-bit planes. FRAME_BITMAP begins immediately after
@@ -42,7 +58,8 @@ FRAME constant FRAME_DESCRIPTOR
     allocate-map frame FRAME_METADATA !
     0 frame FRAME_STATISTICS !
     0 frame FRAME_PIPELINE !
-    0 frame FRAME_STARS !
+    star-buffer-bytes allocate abort" unable to allocate star list"
+    dup star-buffer-bytes erase frame FRAME_STARS !
     frame
 ;
 
@@ -50,7 +67,7 @@ FRAME constant FRAME_DESCRIPTOR
     dup FRAME_METADATA @ ?dup if free-map then
     dup FRAME_STATISTICS @ ?dup if free drop then
     dup FRAME_PIPELINE @ ?dup if free throw then
-    dup FRAME_STARS @ ?dup if free throw then
+    dup FRAME_STARS @ free throw
     free drop
 ;
 

@@ -8,6 +8,8 @@ Tstart
 
 T{ test-frame FRAME_METADATA @ map-count }T 0 ==
 T{ test-frame FRAME_STATISTICS @ }T 0 ==
+T{ test-frame FRAME_STARS @ 0<> }T -1 ==
+T{ test-frame FRAME_STARS @ star.positive-pixel-count @ }T 0 ==
 T{ test-frame frame-size }T 16 8 * 2 * ==
 T{ test-frame frame-capacity }T 16 8 * 2 * ==
 
@@ -40,7 +42,6 @@ T{ test-frame frame-size }T 8 4 * 2 * ==
 T{ test-frame frame-capacity }T 16 8 * 2 * ==
 
 32 allocate throw test-frame FRAME_PIPELINE !
-64 allocate throw test-frame FRAME_STARS !
 T{ test-frame free-frame }T ==
 Tend
 
