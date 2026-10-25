@@ -2,9 +2,9 @@ NEED ForthAstroFormats
 NEED simple-tester
 
 16 8 1 allocate-frame constant test-frame
-FILEPATH_SIZE allocate-buffer constant test-filepath
 
 Tstart
+T{ [DEFINED] save-PNGimage-to [DEFINED] save-RAWimage-to }T -1 -1 ==
 
 T{ test-frame FRAME_METADATA @ map-count }T 0 ==
 T{ test-frame FRAME_STATISTICS @ 0<> }T -1 ==
@@ -13,16 +13,6 @@ T{ test-frame FRAME_STARS @ 0<> }T -1 ==
 T{ test-frame FRAME_STARS @ star.positive-pixel-count @ }T 0 ==
 T{ test-frame frame-size }T 16 8 * 2 * ==
 T{ test-frame frame-capacity }T 16 8 * 2 * ==
-
-test-filepath reset-buffer
-s" E:\images\tests\invalid\artifact.dat" test-filepath write-buffer drop
-T{ test-filepath valid-filepath-folder? }T 0 ==
-
-test-filepath reset-buffer
-s" E:\images\tests\valid\" test-filepath write-buffer drop
-test-filepath buffer-punctuate-filepath
-s" artifact.dat" test-filepath write-buffer drop
-T{ test-filepath valid-filepath-folder? }T -1 ==
 
 s" first" test-frame FRAME_METADATA @ =>" FIRST"
 s" second" test-frame FRAME_METADATA @ =>" SECOND"
@@ -42,8 +32,6 @@ test-frame initialize-frame
 T{ test-frame frame-size }T 8 4 * 2 * ==
 T{ test-frame frame-capacity }T 16 8 * 2 * ==
 
-32 allocate throw test-frame FRAME_PIPELINE !
+32 allocate T{ dup }T 0 == drop test-frame FRAME_PIPELINE !
 T{ test-frame free-frame }T ==
 Tend
-
-test-filepath free-buffer

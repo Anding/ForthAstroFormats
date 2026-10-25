@@ -35,8 +35,10 @@ T{ FITSfilepath buffer-to-string FileExists? }T -1 ==
 science.test-other save-XISFimage
 science.test-other save-FITSimage
 T{ science.test-frame save-XISFimage science.test-frame save-FITSimage }T ==
-XISFfilepath buffer-to-string xisf.load-file throw constant science.test-xisf
-FITSfilepath buffer-to-string xisf.load-FITSfile throw constant science.test-fits
+XISFfilepath buffer-to-string xisf.load-file
+T{ dup }T 0 == drop constant science.test-xisf
+FITSfilepath buffer-to-string xisf.load-FITSfile
+T{ dup }T 0 == drop constant science.test-fits
 T{ science.test-xisf FRAME_WIDTH @ science.test-xisf FRAME_HEIGHT @
     science.test-xisf FRAME_BITMAP science.test-xisf frame-size hashS
 }T 64 48 science.test-frame FRAME_BITMAP science.test-frame frame-size hashS ==

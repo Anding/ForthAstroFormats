@@ -85,8 +85,8 @@ FRAME constant FRAME_DESCRIPTOR
 : free-frame ( frame -- )
     dup FRAME_METADATA @ ?dup if free-map then
     dup FRAME_STATISTICS @ free drop
-    dup FRAME_PIPELINE @ ?dup if free throw then
-    dup FRAME_STARS @ free throw
+    dup FRAME_PIPELINE @ ?dup if free if cr ." Cannot free frame pipeline" cr then then
+    dup FRAME_STARS @ free if cr ." Cannot free frame stars" cr then
     free drop
 ;
 

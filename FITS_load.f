@@ -1,33 +1,28 @@
 \ FITS loading into a format-neutral FRAME.
 
-256 buffer: XISF.FITSloadline
 \ The loader accepts this project's 16-bit, two-axis primary images. It reuses
 \ the shared FITS header buffer and is therefore synchronous/non-reentrant.
 
 : xisf.open-FITSfile ( caddr u -- fileid 0 | ior )
-    r/o open-file dup if ." Cannot open FITS file" then
+    r/o open-file dup if nip cr ." Cannot open FITS file" cr then
 ;
 
 : xisf.scanFITS-for-metadata { frame | map -- }
     frame FRAME_METADATA @ -> map
-    fits.header-buffer buffer-to-string
-    begin
-        over 80 FITS.read-line >R
-        R@ 0= if map map! then
-    R> 1 <> while
-        80 /string
-        dup 0= if ." Unexpected EOF" 2drop exit then
-    repeat
-    2drop
+    fits.header-buffer buffer-to-string bounds ?do
+        i 80 FITS.read-line dup 0= if drop map map! else 1 = if leave then then
+    80 +loop
 ;
 
 : XISF.scan-FITSgeometry { fileid | NAXIS1 NAXIS2 depth -- width height depth }
 \ FRAME depth is a plane count; the supported FITS NAXIS=2 image maps to one
 \ greyscale plane. Higher-dimensional FITS images are outside this codec.
-    begin
-        XISF.FITSloadline dup 80 fileid read-line drop
-        0= if ." Unexpected EOF" 2drop 0 0 0 exit then
-        FITS.read-line >R
+    0 -> NAXIS1 0 -> NAXIS2 0 -> depth
+    fits.header-buffer reset-buffer
+    fits.header-buffer FITS_HEADER_SIZE fileid buffer-read-file
+    swap FITS_HEADER_SIZE <> or if cr ." Cannot read FITS header" cr 0 0 0 exit then
+    fits.header-buffer buffer-to-string bounds ?do
+        i 80 FITS.read-line >R
         R@ 0= if
             hash$ case
                 [ s" NAXIS" hash$ ] literal of toInteger 2/ -> depth endof
@@ -36,7 +31,12 @@
                 nip nip
             endcase
         then
-    R> 1 = until
+        R> 1 = if
+            i fits.header-buffer BUFFER_ADDR - 80 + 2879 + 2880 / 2880 *
+            0 fileid reposition-file dup .throw if 0 -> depth then
+            leave
+        then
+    80 +loop
     NAXIS1 NAXIS2 depth
 ;
 
@@ -61,22 +61,13 @@ L$2:
     NEXT,
 END-CODE
 
-: XISF.read-FITSfile { fileid frame -- }
-\ Re-read the fixed header into fits.header-buffer, then read exactly the
-\ logical frame bytes; FITS block padding is deliberately ignored.
-    0 0 fileid reposition-file drop
-    fits.header-buffer reset-buffer
-    fits.header-buffer FITS_HEADER_SIZE fileid buffer-read-file 2drop
-    frame FRAME_BITMAP frame frame-size fileid read-file 2drop
-    frame FRAME_BITMAP frame frame-size reverseConvertDataFITS
-    fileid close-file drop
-;
-
 : xisf.load-FITSfile { caddr u | fileid frame -- frame 0 | ior }
-    caddr u xisf.open-FITSfile if abort" failed to open FITS file" then -> fileid
+    caddr u xisf.open-FITSfile ?dup if exit then -> fileid
     fileid XISF.scan-FITSgeometry ?dup if
         allocate-frame -> frame
-        fileid frame XISF.read-FITSfile
+        frame FRAME_BITMAP frame frame-size fileid read-file swap frame frame-size <> or
+        fileid close-file or dup .throw ?dup if frame free-frame exit then
+        frame FRAME_BITMAP frame frame-size reverseConvertDataFITS
         frame xisf.scanFITS-for-metadata
         frame 0
     else

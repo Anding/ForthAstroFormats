@@ -10,31 +10,26 @@ FILEPATH_SIZE allocate-buffer constant xisf.clone.path
 create xisf.test-header XISF_HEADER_SIZE allot
 s\" </xisf>\r\n" nip constant xisf.test-ending-size
 
-: xisf.load-roundtrip { filepath-buffer -- frame }
-\ Load the saved fixture through the fixed-offset reader.
-    filepath-buffer buffer-to-string xisf.load-file
-    if abort" Cannot load XISF round-trip" then
-;
-
 : xisf.read-test-header { filepath-buffer | fileid -- }
 \ Inspect serialized bytes independently of the XISF loader.
     filepath-buffer buffer-to-string r/o open-file
-        abort" Cannot open XISF test header" -> fileid
+        if drop 1 Tfailures +! cr ." Cannot open XISF test header" cr exit then -> fileid
     xisf.test-header XISF_HEADER_SIZE fileid read-file
-        abort" Cannot read XISF test header"
-    XISF_HEADER_SIZE <> abort" Incomplete XISF test header"
-    fileid close-file abort" Cannot close XISF test header"
+        if 1 Tfailures +! cr ." Cannot read XISF test header" cr then
+    XISF_HEADER_SIZE <> if 1 Tfailures +! cr ." Incomplete XISF test header" cr then
+    fileid close-file if 1 Tfailures +! cr ." Cannot close XISF test header" cr then
 ;
 
+Tstart
 test.make-frame -> xisf.source
 0 0 xisf.source FRAME_METADATA @ =>" EMPTY"
 s" roundtrip.xisf" xisf.roundtrip.path test.prepare-path drop
 xisf.source xisf.roundtrip.path save-XISFimage-to
-xisf.roundtrip.path xisf.load-roundtrip -> xisf.clone
+xisf.roundtrip.path buffer-to-string xisf.load-file
+T{ dup }T 0 == drop -> xisf.clone
 s" roundtrip-clone.xisf" xisf.clone.path test.prepare-path drop
 xisf.clone xisf.clone.path save-XISFimage-to
 
-Tstart
 xisf.roundtrip.path xisf.read-test-header
 T{ xisf.test-header 8 s" XISF0100" compare }T 0 ==
 T{ xisf.test-header 8 + @ dup 0> swap XISF_HEADER_SIZE 16 - <= and }T -1 ==

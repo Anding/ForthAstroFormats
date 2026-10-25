@@ -12,15 +12,17 @@ need simple-tester
 : test.write-file { caddr u filepath-buffer | fileid -- }
     filepath-buffer create-imageDirectory
     filepath-buffer buffer-to-string w/o
-        create-file abort" Cannot create test file" -> fileid
-    caddr u fileid write-file abort" Cannot write test file"
-    fileid close-file abort" Cannot close test file"
+        create-file if drop 1 Tfailures +! cr ." Cannot create test file" cr exit then -> fileid
+    caddr u fileid write-file if 1 Tfailures +! cr ." Cannot write test file" cr then
+    fileid close-file if 1 Tfailures +! cr ." Cannot close test file" cr then
 ;
 
 : test.file-hash { filepath-buffer | fileid buffer -- }
     filepath-buffer buffer-to-string r/o
-        open-file abort" Cannot open test file" -> fileid
+        open-file if drop 1 Tfailures +! cr ." Cannot open test file" cr 0 exit then -> fileid
     fileid file-to-buffer -> buffer
+    fileid close-file drop
+    buffer 0= if 1 Tfailures +! 0 exit then
     buffer buffer-to-string hashS
     buffer free-buffer
 ;

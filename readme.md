@@ -72,8 +72,9 @@ accumulator and rejects oversized metadata. Serializer callbacks consume
 the supplied key and value strings directly.
 
 `FITS_projection_test2.f` covers empty values, zero, NUL, control bytes and
-maximum-length counted values without hardware. Projection errors abort
-explicitly; there is no projection logger.
+maximum-length counted values without hardware. Ordinary errors are printed
+and return normally. Failed writers remove partial files and clear their retained
+pathname; an empty pathname skips I/O. Only allocation failures abort.
 
 `replace-file-atomically` expects ForthBase buffer descriptors containing
 source and destination paths. It temporarily appends the required NUL
@@ -106,7 +107,7 @@ write-filepath-wcs                ( frame caddr u filepath-buffer -- )
 Each writer owns its dedicated deferred pathname creator, retained filepath
 buffer, extension, and file I/O. Standalone Formats use must assign the
 required pathname actions or use explicit `*-to` writers with prepared paths.
-Unconfigured pathname actions abort explicitly. Applications wanting the
+Unconfigured pathname actions report the error and clear the path. Applications wanting the
 imaging naming scheme can load it without equipment:
 
 ```forth
@@ -116,16 +117,15 @@ NEED AstroImagePaths
 After policy is installed, ordinary orchestration passes its frame to each writer.
 
 Complete-path composers must call `buffer-punctuate-filepath` after the
-folder and before the filename. Directory creation rejects buffers without
-that recorded boundary rather than passing an invalid length to Windows.
+folder and before the filename. Directory creation trusts this caller contract.
 
 ```forth
 frame save-XISFimage
 frame save-FITSimage
 ```
 
-A private solver temporarily replaces only `write-filepath-fits`, calls
-`save-FITSframe-to`, and restores the previous action.
+A private solver executes its own pathname action and calls the explicit
+FITS writer without altering the science writer's action.
 
 `append-UUID-suffix ( uuid-addr uuid-u filepath-buffer -- )` appends `-` and
 UUID bytes at offset 24, length 12, only when at least 36 bytes are present.
@@ -138,11 +138,21 @@ AstroImagingInForth's `MountAlignment` vocabulary. Formats `Solver.f` retains
 generic solver dispatch and WCS import.
 Its `solver.solved-metadata ( metadata -- )` defer defaults to `drop`.
 MountAlignment binds it to add `10UALPT` after every successful frame solve.
+`solver.import-WCS ( caddr u frame -- ior )` must succeed before marking a solve.
 
 `Publication.f` consolidates preview/histogram writers, FITS-map projections,
 binary output and manifests. `AtomicFile.f` supplies the native replacement
 primitive; `Paths.f` owns generic pathname mechanics. `NEED ForthPublication`,
 `NEED FITS_projection` and `NEED ForthPreview` remain supported loader names.
+
+Manifest record writers and the optional `write-preview-manifest-extension`
+action return native `ior`. A failed write or close discards the temporary file
+without replacing the previous manifest. `FITS_projection_test2.f` exercises
+repeated failed writes with mocked OS write errors and real file cleanup.
+
+The retired split-layer dependency tests were obsolete: the registry now loads
+one consolidated formats package. Export-word coverage is retained in
+`Frame_test1.f`; FITS-card coverage is retained in ASTAP's pathname suite.
 
 Preview and metadata publication also receive the frame explicitly:
 

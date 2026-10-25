@@ -46,10 +46,6 @@ create fits.pixel-buffer FITS_TRANSFER_SIZE allot
     ['] FITS.map-iterate rot map-for-each drop
 ;
 
-: FITS.padded-size ( frame -- size )
-    frame-size 2879 + 2880 / 2880 *
-;
-
 CODE convertDataFITS ( src dst n -- )
 \ Convert unsigned little-endian camera words to FITS signed big-endian words.
 \ BZERO=32768 in the header reconstructs the original unsigned sample values.
@@ -74,19 +70,21 @@ L$2:
     NEXT,
 END-CODE
 
-: FITS.encode-header { frame header-buffer -- }
+: FITS.encode-header { frame header-buffer -- ior }
 \ FITS cards retain ordered-map insertion order. Unused fixed-header cards are
 \ blank-filled before END so pixel data always starts at FITS_HEADER_SIZE.
     header-buffer reset-buffer
     s" SIMPLE  = T                                                                     " header-buffer write-buffer drop
     frame FRAME_METADATA @ header-buffer FITS.write-map
+    header-buffer buffer_space 80 < if cr ." FITS header buffer full" cr -1 exit then
     header-buffer buffer_space 80 / 1- 0 ?do
         s"                                                                                 " header-buffer write-buffer drop
     loop
     s" END                                                                             " header-buffer write-buffer drop
+    0
 ;
 
-: FITS.write-pixels { frame fileid | source remaining chunk padding -- }
+: FITS.write-pixels { frame fileid | source remaining chunk padding -- ior }
 \ Convert bounded chunks directly to the FITS byte order and unsigned offset.
     frame FRAME_BITMAP -> source
     frame frame-size -> remaining
@@ -96,27 +94,27 @@ END-CODE
         remaining FITS_TRANSFER_SIZE min -> chunk
         source fits.pixel-buffer chunk convertDataFITS
         fits.pixel-buffer chunk fileid write-file
-            abort" Cannot access FITS file"
+            ?dup if exit then
         source chunk + -> source
         remaining chunk - -> remaining
     repeat
-    frame FITS.padded-size frame frame-size - -> padding
+    frame frame-size 2880 mod dup if 2880 swap - then -> padding
     padding if
         fits.pixel-buffer padding erase
-        fits.pixel-buffer padding fileid write-file
-            abort" Cannot access FITS file"
+        fits.pixel-buffer padding fileid write-file exit
     then
+    0
 ;
 
 : save-FITSimage-to { frame filepath-buffer | fileid -- }
 \ Save a FITS frame to an explicitly prepared pathname.
-    frame fits.header-buffer FITS.encode-header
-    filepath-buffer create-imageDirectory
-    filepath-buffer buffer-to-string w/o
-        create-file abort" Cannot create FITS file" -> fileid
-    fits.header-buffer BUFFER_ADDR FITS_HEADER_SIZE fileid write-file abort" Cannot access FITS file"
-    frame fileid FITS.write-pixels
-    fileid close-file abort" Cannot close FITS file"
+    filepath-buffer buffer_used 0= if exit then
+    frame fits.header-buffer FITS.encode-header if filepath-buffer reset-buffer exit then
+    filepath-buffer open-publication-file -> fileid
+    fileid 0= if exit then
+    fileid
+    fits.header-buffer BUFFER_ADDR FITS_HEADER_SIZE fileid write-file
+    frame fileid FITS.write-pixels or filepath-buffer finish-image-file
 ;
 
 : save-FITSframe-to { frame filepath-buffer -- }

@@ -1,16 +1,7 @@
 \ XISF loading into a format-neutral FRAME.
 
 : xisf.open-file ( caddr u -- fileid 0 | ior )
-    r/o open-file ?dup if ." Cannot open XISF file" exit then
-    0
-;
-
-: xisf.read-header { fileid -- }
-\ Read the complete fixed header so the file position lands at the attachment.
-    xisf.header-buffer reset-buffer
-    xisf.header-buffer XISF_HEADER_SIZE fileid buffer-read-file
-    abort" Cannot read XISF header"
-    XISF_HEADER_SIZE <> abort" Cannot read full XISF header"
+    r/o open-file dup if nip cr ." Cannot open XISF file" cr then
 ;
 
 : xisf.scan-for-geometry ( header-buffer -- width height depth )
@@ -19,13 +10,6 @@
     R> drop
     0= if 0 0 0 exit then
     10 /string 1- >number~~~
-;
-
-: xisf.read-file { fileid frame -- }
-\ The caller has already consumed XISF_HEADER_SIZE bytes; read only the
-\ geometry-derived attachment and ignore any future trailing blocks.
-    frame FRAME_BITMAP frame frame-size fileid read-file 2drop
-    fileid close-file drop
 ;
 
 : xisf.scan-for-metadata { frame | map -- }
@@ -48,16 +32,20 @@
 ;
 
 : xisf.load-file { caddr u | fileid frame -- frame 0 | ior }
-    caddr u xisf.open-file if exit then -> fileid
-    fileid xisf.read-header
+    caddr u xisf.open-file ?dup if exit then -> fileid
+    xisf.header-buffer reset-buffer
+    xisf.header-buffer XISF_HEADER_SIZE fileid buffer-read-file swap XISF_HEADER_SIZE <> or
+    dup .throw ?dup if >R fileid close-file .throw R> exit then
     xisf.header-buffer xisf.scan-for-geometry ?dup if
         allocate-frame -> frame
-        fileid frame xisf.read-file
+        frame FRAME_BITMAP frame frame-size fileid read-file swap frame frame-size <> or
+        fileid close-file or dup .throw ?dup if frame free-frame exit then
         frame xisf.scan-for-metadata
         frame 0
     else
         2drop
         fileid close-file drop
+        cr ." Invalid XISF geometry" cr
         -1
     then
 ;

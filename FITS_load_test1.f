@@ -22,7 +22,7 @@ T{ s" SIMPLE  = T                                                               
 
 : test.XISF.scan-FITSgeometry ( caddr u -- width height depth )
     xisf.open-FITSfile 
-    if abort" xisf.open-FITSfile failed"
+    if 1 Tfailures +! cr ." xisf.open-FITSfile failed" cr 0 0 0
     else
         >R R@ XISF.scan-FITSgeometry
         R> close-file drop

@@ -26,33 +26,31 @@ ASSIGN drop TO-DO solver.solved-metadata
 : solver.temp-FITSfilepath { img suffix-addr suffix-u filepath-buffer -- full? }
 \ Compose the common private solver path, leaving the final buffer-full flag.
     filepath-buffer reset-buffer
-    astro.root filepath-buffer write-buffer drop
+    astro.root filepath-buffer write-buffer ?dup if exit then
     s" working" filepath-buffer append-path
-    '\' filepath-buffer echo-buffer drop
-    s" UUID" img FRAME_METADATA @ map@ filepath-buffer write-buffer drop
-    '\' filepath-buffer echo-buffer drop
+    filepath-buffer buffer_used 0= if -1 exit then
+    '\' filepath-buffer echo-buffer
+    s" UUID" img FRAME_METADATA @ map@ filepath-buffer write-buffer or
+    '\' filepath-buffer echo-buffer or
     filepath-buffer buffer-punctuate-filepath
-    s" solve" filepath-buffer write-buffer drop
-    suffix-addr suffix-u filepath-buffer write-buffer
+    s" solve" filepath-buffer write-buffer or
+    suffix-addr suffix-u filepath-buffer write-buffer or
 ;
 
-: solver.save-temp-FITS { img filepath-buffer path-action | saved-path ior -- }
-\ Write through a temporary pathname action and restore it even on failure.
-    ACTION-OF write-filepath-fits -> saved-path
-    path-action TO-DO write-filepath-fits
-    img filepath-buffer ['] save-FITSframe-to catch -> ior
-    saved-path TO-DO write-filepath-fits
-    ior ?dup if throw then
+: solver.save-temp-FITS { img filepath-buffer path-action -- }
+\ Explicit private paths need not alter the science writer's action.
+    img s" .fits" filepath-buffer path-action execute
+    img filepath-buffer save-FITSimage-to
 ;
 
-: solver.import-WCS { caddr u img | metadata fileid -- }
+: solver.import-WCS { caddr u img | metadata fileid -- ior }
 \ Merge ordinary WCS FITS cards into the frame's ordered metadata.
     img FRAME_METADATA @ -> metadata
-    caddr u r/o open-file abort" Cannot open solver WCS file" -> fileid
+    caddr u r/o open-file dup .throw ?dup if nip exit then -> fileid
     s"  " metadata =>" #ASTROMETRY"
     begin
-        solver.wcs-line 255 fileid read-line
-            abort" Cannot read solver WCS file"
+        solver.wcs-line 255 fileid read-line dup .throw
+        ?dup if >R 2drop fileid close-file .throw R> exit then
     while
         solver.wcs-line swap FITS.read-line
         dup 0= if
@@ -61,6 +59,5 @@ ASSIGN drop TO-DO solver.solved-metadata
             drop
         then
     repeat
-    drop
-    fileid close-file abort" Cannot close solver WCS file"
+    drop fileid close-file dup .throw
 ;

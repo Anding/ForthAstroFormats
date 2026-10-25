@@ -14,4 +14,5 @@ T{ raw.test.path buffer-to-string FileExists? }T -1 ==
 Tend
 
 raw.test.frame free-frame
-bye
+raw.test.path buffer-to-string delete-file .throw
+raw.test.path free-buffer

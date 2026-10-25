@@ -3,63 +3,62 @@
 NEED ForthAstroFormats
 NEED ForthAtomicFile
 
-: open-publication-file { filepath-buffer | fileid -- fileid }
-\ Create the selected publication file and any missing parent directories.
-    filepath-buffer create-imageDirectory
-    filepath-buffer buffer-to-string w/o
-        create-file abort" Cannot create publication file" -> fileid
-    fileid
-;
-
-: write-manifest-line { fileid key-addr key-u value-addr value-u -- }
+: write-manifest-line { fileid key-addr key-u value-addr value-u -- ior }
 \ Write one quoted key/value manifest record.
-    key-addr key-u fileid write-file abort" Cannot write manifest"
-    s\" : \"" fileid write-file abort" Cannot write manifest"
-    value-addr value-u fileid write-file abort" Cannot write manifest"
-    s\" \"\r\n" fileid write-file abort" Cannot write manifest"
+    key-addr key-u fileid write-file ?dup if exit then
+    s\" : \"" fileid write-file ?dup if exit then
+    value-addr value-u fileid write-file ?dup if exit then
+    s\" \"\r\n" fileid write-file
 ;
 
-: write-manifest-path { filepath-buffer fileid -- }
+: write-manifest-path { filepath-buffer fileid -- ior }
 \ Write a Windows pathname as a JSON-style string value.
+    0
     filepath-buffer buffer-to-string bounds ?do
         i c@ '\' = if
-            s" \\" fileid write-file abort" Cannot write manifest"
+            s" \\" fileid write-file
         else
-            i 1 fileid write-file abort" Cannot write manifest"
+            i 1 fileid write-file
         then
+        or
     loop
 ;
 
-: write-path-manifest-line { fileid key-addr key-u filepath-buffer -- }
+: write-path-manifest-line { fileid key-addr key-u filepath-buffer -- ior }
 \ Write one manifest record containing an authoritative generated filepath.
-    key-addr key-u fileid write-file abort" Cannot write manifest"
-    s\" : \"" fileid write-file abort" Cannot write manifest"
-    filepath-buffer fileid write-manifest-path
-    s\" \"\r\n" fileid write-file abort" Cannot write manifest"
+    key-addr key-u fileid write-file ?dup if exit then
+    s\" : \"" fileid write-file ?dup if exit then
+    filepath-buffer fileid write-manifest-path ?dup if exit then
+    s\" \"\r\n" fileid write-file
 ;
 
 : save-binary-file-to
     { data-addr data-u filepath-buffer | fileid -- }
 \ Save one binary artifact to an explicitly prepared pathname.
-    filepath-buffer create-imageDirectory
-    filepath-buffer buffer-to-string w/o
-        create-file abort" Cannot create binary publication" -> fileid
-    data-addr data-u fileid write-file abort" Cannot write binary publication"
-    fileid close-file abort" Cannot close binary publication"
+    filepath-buffer open-publication-file -> fileid
+    fileid if fileid data-addr data-u fileid write-file filepath-buffer finish-image-file then
 ;
 
-: no-preview-manifest-extension ( fileid -- )
+: no-preview-manifest-extension ( fileid -- ior )
 \ Default extension action: append no additional manifest records.
-    drop
+    drop 0
 ;
 
-\ Optional ( fileid -- ) action; append records without closing the manifest.
-DEFER write-preview-manifest-extension ( fileid -- )
+\ Optional ( fileid -- ior ) action; append records without closing the manifest.
+DEFER write-preview-manifest-extension ( fileid -- ior )
 ASSIGN no-preview-manifest-extension TO-DO write-preview-manifest-extension
+
+: write-frame-manifest-lines { frame fileid -- ior }
+    fileid s" image name" s" UUID" frame FRAME_METADATA @ map@ write-manifest-line
+    fileid s" time-stamp" s" DATE-END" frame FRAME_METADATA @ map@ write-manifest-line or
+;
 
 : publish-preview-manifest { frame preview? histogram? | fileid -- }
 \ Atomically publish selected artifacts which exist for the supplied frame.
 \ Resolve every selected path afresh; shared buffers may refer to an older frame.
+    preview? preview-BMPfilepath buffer_used 0<> and
+        stretched-BMPfilepath buffer_used 0<> and -> preview?
+    histogram? histogram-filepath buffer_used 0<> and -> histogram?
     preview? if
         frame s" .bmp" preview-BMPfilepath write-filepath-bmp
         frame s" .bmp" stretched-BMPfilepath write-filepath-stretched-bmp
@@ -75,22 +74,22 @@ ASSIGN no-preview-manifest-extension TO-DO write-preview-manifest-extension
     frame s" .tmp" preview-manifest-tmp-filepath
         write-filepath-preview-manifest
     preview-manifest-tmp-filepath open-publication-file -> fileid
+    fileid 0= if preview-manifest-filepath reset-buffer exit then
+    0
     preview? if
         fileid s" image filepath" preview-BMPfilepath
-            write-path-manifest-line
+            write-path-manifest-line or
         fileid s" stretched image filepath" stretched-BMPfilepath
-            write-path-manifest-line
+            write-path-manifest-line or
     then
     histogram? if
         fileid s" histogram filepath" histogram-filepath
-            write-path-manifest-line
+            write-path-manifest-line or
     then
-    fileid s" image name" s" UUID" frame FRAME_METADATA @ map@
-        write-manifest-line
-    fileid s" time-stamp" s" DATE-END" frame FRAME_METADATA @ map@
-        write-manifest-line
-    fileid write-preview-manifest-extension
-    fileid close-file abort" Cannot close manifest"
+    frame fileid write-frame-manifest-lines or
+    fileid write-preview-manifest-extension or
+    fileid swap preview-manifest-tmp-filepath finish-image-file
+    preview-manifest-tmp-filepath buffer_used 0= if preview-manifest-filepath reset-buffer exit then
     preview-manifest-tmp-filepath preview-manifest-filepath
         replace-file-atomically
 ;
@@ -101,14 +100,14 @@ ASSIGN no-preview-manifest-extension TO-DO write-preview-manifest-extension
         write-filepath-metadata-manifest
     frame s" .tmp" metadata-manifest-tmp-filepath
         write-filepath-metadata-manifest
+    FITSprojection-filepath buffer_used 0= if exit then
     metadata-manifest-tmp-filepath open-publication-file -> fileid
+    fileid 0= if metadata-manifest-filepath reset-buffer exit then
     fileid s" fits keys filepath" FITSprojection-filepath
         write-path-manifest-line
-    fileid s" image name" s" UUID" frame FRAME_METADATA @ map@
-        write-manifest-line
-    fileid s" time-stamp" s" DATE-END" frame FRAME_METADATA @ map@
-        write-manifest-line
-    fileid close-file abort" Cannot close manifest"
+    frame fileid write-frame-manifest-lines or
+    fileid swap metadata-manifest-tmp-filepath finish-image-file
+    metadata-manifest-tmp-filepath buffer_used 0= if metadata-manifest-filepath reset-buffer exit then
     metadata-manifest-tmp-filepath metadata-manifest-filepath
         replace-file-atomically
 ;
@@ -117,11 +116,11 @@ ASSIGN no-preview-manifest-extension TO-DO write-preview-manifest-extension
 
 : XISF.mapIterProjection { buf key-addr key-u value-addr value-u -- buf }
 \ Append one tab-separated map entry to the retained projection buffer.
-    key-addr key-u buf write-buffer abort" FITS projection buffer full"
-    9 buf echo-buffer abort" FITS projection buffer full"
-    value-addr value-u buf write-buffer abort" FITS projection buffer full"
-    13 buf echo-buffer abort" FITS projection buffer full"
-    10 buf echo-buffer abort" FITS projection buffer full"
+    key-addr key-u buf write-buffer drop
+    9 buf echo-buffer drop
+    value-addr value-u buf write-buffer drop
+    13 buf echo-buffer drop
+    10 buf echo-buffer drop
     buf
 ;
 
@@ -130,25 +129,18 @@ ASSIGN no-preview-manifest-extension TO-DO write-preview-manifest-extension
     total key-u + value-u + 3 +
 ;
 
-: FITS.projection-size ( map -- size )
-\ Account for key, tab, value, CR, and LF before allocating publication state.
-    0 ['] FITS.projection-item-size rot map-for-each
-;
-
-: save-FITSprojection-to { img filepath-buffer | fileid projection-buffer map -- }
+: save-FITSprojection-to { img filepath-buffer | projection-buffer map -- }
 \ Projection files are small transient publications, so one bounded buffer is
 \ allocated per write and released before returning.
     img FRAME_METADATA @ -> map
-    map FITS.projection-size FITS_PROJECTION_SIZE >
-        abort" FITS projection buffer full"
-    filepath-buffer create-imageDirectory
-    filepath-buffer buffer-to-string w/o
-        create-file abort" Cannot create FITS projection" -> fileid
+    filepath-buffer buffer_used 0= if exit then
+    0 ['] FITS.projection-item-size map map-for-each FITS_PROJECTION_SIZE > if
+        cr ." FITS projection buffer full" cr filepath-buffer reset-buffer exit
+    then
     FITS_PROJECTION_SIZE allocate-buffer -> projection-buffer
     projection-buffer ['] XISF.mapIterProjection map map-for-each drop
-    projection-buffer fileid buffer-to-file
+    projection-buffer buffer-to-string filepath-buffer save-binary-file-to
     projection-buffer free-buffer
-    fileid close-file abort" Cannot close FITS projection"
 ;
 
 : save-FITSprojection { frame -- }
@@ -168,5 +160,6 @@ ASSIGN no-preview-manifest-extension TO-DO write-preview-manifest-extension
     frame s" .bin" histogram-filepath write-filepath-histogram
     frame FRAME_STATISTICS @ HISTOGRAM 0x40000 histogram-filepath
         save-binary-file-to
+    histogram-filepath buffer_used 0= if exit then
     frame -1 -1 publish-preview-manifest
 ;

@@ -1,16 +1,13 @@
 \ Save 16-bit greyscale data as an 8-bit BMP using each sample's high byte.
 
-: save-BMPimage-to { frame bitmap filepath-buffer | ior -- }
+: save-BMPimage-to { frame bitmap filepath-buffer | filename -- }
 \ Save supplied pixels to an explicitly prepared pathname.
-    filepath-buffer create-imageDirectory
-    0 filepath-buffer echo-buffer abort" BMP filepath buffer full"
+    filepath-buffer native-image-filepath -> filename
+    filename 0= if exit then
     bitmap
     frame FRAME_WIDTH @
     frame FRAME_HEIGHT @
-    filepath-buffer buffer-to-string drop
-    SaveBitmapAsBMP -> ior
-    filepath-buffer backspace-buffer abort" Cannot restore BMP filepath"
-    ior abort" Error writing BMP file"
+    filename SaveBitmapAsBMP dup .throw if filepath-buffer discard-image-file then
 ;
 
 : save-BMPimage { frame -- }

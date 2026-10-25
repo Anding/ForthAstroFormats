@@ -5,17 +5,37 @@ NEED ForthBase
 256 constant FILEPATH_SIZE
 s" " $value astro.root
 
-: valid-filepath-folder? { filepath-buffer | folder-u -- flag }
-\ Require a drive prefix and a recorded folder wholly inside the used buffer.
-    filepath-buffer BUFFER_LEN_DIR @ -> folder-u
-    folder-u 3 >=
-    folder-u filepath-buffer buffer_used <= and
+: create-imageDirectory ( filepath-buffer -- )
+    dup buffer_used 0= if drop exit then
+    >R
+    R@ buffer-drive-to-string R@ buffer-dir-to-string makeDirLevels
+    dup .throw if R@ reset-buffer then
+    R> drop
 ;
 
-: create-imageDirectory ( filepath-buffer -- )
-    dup valid-filepath-folder? 0= abort" Filepath folder not punctuated"
-    >R
-    R@ buffer-drive-to-string R> buffer-dir-to-string makeDirLevels abort" cannot create image directory"
+: discard-image-file ( filepath-buffer -- )
+\ A failed write must not leave an artifact or an authoritative pathname.
+    dup buffer-to-string delete-file drop reset-buffer
+;
+
+: open-publication-file { filepath-buffer -- fileid|0 }
+    filepath-buffer create-imageDirectory
+    filepath-buffer buffer_used 0= if 0 exit then
+    filepath-buffer buffer-to-string w/o create-file dup .throw if
+        drop filepath-buffer reset-buffer 0
+    then
+;
+
+: finish-image-file { fileid ior filepath-buffer -- }
+    fileid close-file ior or dup .throw if filepath-buffer discard-image-file then
+;
+
+: native-image-filepath { filepath-buffer -- caddr|0 }
+    filepath-buffer create-imageDirectory
+    filepath-buffer buffer_used 0= if 0 exit then
+    0 filepath-buffer echo-buffer dup .throw if filepath-buffer reset-buffer 0 exit then
+    filepath-buffer backspace-buffer drop
+    filepath-buffer BUFFER_ADDR
 ;
 
 \ Writer-owned paths retain the most recently published artifacts.
@@ -33,21 +53,23 @@ FILEPATH_SIZE allocate-buffer constant FITSfilepath
 
 : append-path { caddr u filepath-buffer -- }
 \ Append one backslash-separated component to a prepared pathname.
-    '\' filepath-buffer echo-buffer abort" Filepath buffer full"
-    caddr u filepath-buffer write-buffer abort" Filepath buffer full"
+    filepath-buffer buffer_used 0= if exit then
+    '\' filepath-buffer echo-buffer
+    caddr u filepath-buffer write-buffer or dup .throw if filepath-buffer reset-buffer then
 ;
 
 : append-UUID-suffix { uuid-addr uuid-u filepath-buffer -- }
 \ Missing and short UUIDs contribute neither separator nor suffix.
     uuid-u 36 < if exit then
-    '-' filepath-buffer echo-buffer abort" Science filepath buffer full"
-    uuid-addr 24 + 12 filepath-buffer write-buffer
-        abort" Science filepath buffer full"
+    filepath-buffer buffer_used 0= if exit then
+    '-' filepath-buffer echo-buffer
+    uuid-addr 24 + 12 filepath-buffer write-buffer or dup .throw
+    if filepath-buffer reset-buffer then
 ;
 
 : no-image-filepath ( frame caddr u filepath-buffer -- )
-    2drop 2drop
-    true abort" Image filepath policy is not configured"
+    reset-buffer 2drop drop
+    cr ." Image filepath policy is not configured" cr
 ;
 
 DEFER write-filepath-bmp ( frame caddr u filepath-buffer -- )

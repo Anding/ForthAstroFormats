@@ -36,7 +36,7 @@ s\" <FITSKeyword name=\"EMPTY\" value=\"''\" />\r\n<FITSKeyword name=\"TOOLONGKE
     metadata.test-expected write-buffer drop
 T{ metadata.test-map metadata.test-buffer XISF.write-map-XISF
    metadata.test-buffer buffer-to-string hashS
-}T metadata.test-expected buffer-to-string hashS ==
+}T 0 metadata.test-expected buffer-to-string hashS ==
 T{ 0 0 FITSstrToStr }T 0 0 ==
 
 metadata.test-map erase-map
@@ -72,18 +72,20 @@ s" E:\images\tests\" metadata.test-path write-buffer drop
 metadata.test-path buffer-punctuate-filepath
 s" metadata-order.wcs" metadata.test-path write-buffer drop
 metadata.test-path create-imageDirectory
-metadata.test-path buffer-to-string w/o create-file throw constant metadata.test-file
+metadata.test-path buffer-to-string w/o create-file
+T{ dup }T 0 == drop constant metadata.test-file
 s\" CTYPE1  = 'RA---TAN'\r\nCRVAL1  = 1.0\r\n"
-    metadata.test-file write-file throw
-metadata.test-file close-file throw
-metadata.test-path buffer-to-string metadata.test-frame solver.import-WCS
+    metadata.test-file write-file
+T{ dup }T 0 == drop
+T{ metadata.test-file close-file }T 0 ==
+T{ metadata.test-path buffer-to-string metadata.test-frame solver.import-WCS }T 0 ==
 s" alignment" metadata.test-frame FRAME_METADATA @ =>" 10UALPT"
 metadata.test-buffer reset-buffer
 metadata.test-buffer ' metadata.test-key
     metadata.test-frame FRAME_METADATA @ map-for-each drop
 T{ metadata.test-buffer buffer-to-string
    s" #ASTROMETRY CTYPE1 CRVAL1 10UALPT " compare }T 0 ==
-metadata.test-path buffer-to-string delete-file throw
+T{ metadata.test-path buffer-to-string delete-file }T 0 ==
 metadata.test-frame free-frame
 metadata.test-path free-buffer
 Tend
