@@ -1,4 +1,4 @@
-NEED ForthAstroPaths
+NEED ForthAstroFormats
 NEED simple-tester
 
 FILEPATH_SIZE allocate-buffer constant paths.test.filepath

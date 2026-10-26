@@ -1,5 +1,5 @@
 \ Adversarial values remain byte strings, not numbers or NUL-terminated text.
-NEED FITS_projection
+NEED ForthAstroFormats
 NEED simple-tester
 
 4 3 1 allocate-frame constant projection.bad-image

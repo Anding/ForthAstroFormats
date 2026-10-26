@@ -1,7 +1,7 @@
 \ RAW export with an explicit destination buffer.
 
 NEED simple-tester
-NEED ForthImageExport
+NEED ForthAstroFormats
 include "%idir%\ForthAstroFormats_test_support.f"
 
 FILEPATH_SIZE allocate-buffer constant raw.test.path

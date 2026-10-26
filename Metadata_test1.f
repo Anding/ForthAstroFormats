@@ -1,5 +1,5 @@
 \ FITS and XISF serializers consume ordered key/value pairs, including empties.
-NEED ForthXISF
+NEED ForthAstroFormats
 NEED simple-tester
 
 allocate-map constant metadata.test-map

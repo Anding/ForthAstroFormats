@@ -1,6 +1,6 @@
 \ Shared frame and filepath helpers for codec regression tests.
 
-NEED ForthImageLoaders
+NEED ForthAstroFormats
 
 : test.make-frame-sized { width height | frame map -- frame }
     width height 1 allocate-frame -> frame

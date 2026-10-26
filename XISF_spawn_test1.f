@@ -1,4 +1,4 @@
-need ForthFrameTools
+need ForthAstroFormats
 
 need simple-tester
 0 value image1

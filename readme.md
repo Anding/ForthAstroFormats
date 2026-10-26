@@ -52,7 +52,7 @@ import starts `#ASTROMETRY`, grouping the solution through `10UALPT`.
 Load the projection vocabulary through the ForthBase manifest:
 
 ```forth
-NEED FITS_projection
+NEED ForthAstroFormats
 ```
 
 The public words are:
@@ -111,7 +111,7 @@ Unconfigured pathname actions report the error and clear the path. Applications 
 imaging naming scheme can load it without equipment:
 
 ```forth
-NEED AstroImagePaths
+NEED AstroImagingInForth
 ```
 
 After policy is installed, ordinary orchestration passes its frame to each writer.
@@ -142,8 +142,8 @@ MountAlignment binds it to add `10UALPT` after every successful frame solve.
 
 `Publication.f` consolidates preview/histogram writers, FITS-map projections,
 binary output and manifests. `AtomicFile.f` supplies the native replacement
-primitive; `Paths.f` owns generic pathname mechanics. `NEED ForthPublication`,
-`NEED FITS_projection` and `NEED ForthPreview` remain supported loader names.
+primitive; `Paths.f` owns generic pathname mechanics. `NEED ForthAstroFormats`
+is the repository's single public loader, including all of these sources.
 
 Manifest record writers and the optional `write-preview-manifest-extension`
 action return native `ior`. A failed write or close discards the temporary file

@@ -1,7 +1,6 @@
 \ Regression coverage for ordered FITS-map projection and atomic publication.
 
-need ForthXISF
-need FITS_projection
+need ForthAstroFormats
 need simple-tester
 
 256 allocate-buffer constant projection.path

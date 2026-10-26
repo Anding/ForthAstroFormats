@@ -1,4 +1,4 @@
-need forthXISF
+need ForthAstroFormats
 include "%idir%\PNG.f"
 
 s" E:\testdata\images\LUM-E155-F5100-f7843758a3f5.xisf" xisf.load-file drop constant png.test-frame

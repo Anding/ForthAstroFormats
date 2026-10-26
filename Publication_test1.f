@@ -1,4 +1,4 @@
-NEED ForthPublication
+NEED ForthAstroFormats
 NEED simple-tester
 
 \ Keep injected failures visible without native source-caret transport framing.

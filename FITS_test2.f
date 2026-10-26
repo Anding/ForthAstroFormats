@@ -1,4 +1,4 @@
-need ForthXISF
+need ForthAstroFormats
 need simple-tester
 
 cr

@@ -1,4 +1,4 @@
-need forthXISF
+need ForthAstroFormats
 need simple-tester
 
 4096 buffer: buf1

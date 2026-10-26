@@ -1,8 +1,5 @@
 \ Preview, histogram, metadata projection and manifest publication.
 
-NEED ForthAstroFormats
-NEED ForthAtomicFile
-
 : write-manifest-line { fileid key-addr key-u value-addr value-u -- ior }
 \ Write one quoted key/value manifest record.
     key-addr key-u fileid write-file ?dup if exit then
