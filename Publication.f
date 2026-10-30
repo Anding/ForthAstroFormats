@@ -155,11 +155,16 @@ ASSIGN no-preview-manifest-extension TO-DO write-preview-manifest-extension
     frame WCSfilepath save-FITSprojection-to
 ;
 
-: save-Histogram { frame -- }
-\ Save 65,536 four-byte bins and independently publish available preview artifacts.
+: save-Histogram-file { frame -- }
+\ Save 65,536 four-byte bins without publishing a partially completed preview.
     frame s" .bin" histogram-filepath write-filepath-histogram
     frame FRAME_STATISTICS @ HISTOGRAM 0x40000 histogram-filepath
         save-binary-file-to
+;
+
+: save-Histogram { frame -- }
+\ Save and independently publish available preview artifacts for direct callers.
+    frame save-Histogram-file
     histogram-filepath buffer_used 0= if exit then
     frame -1 -1 publish-preview-manifest
 ;
