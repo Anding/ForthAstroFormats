@@ -79,6 +79,25 @@ T{ preview-manifest-filepath s" previous manifest" publication.test-contains? }T
 ASSIGN no-preview-manifest-extension TO-DO write-preview-manifest-extension
 T{ publication.test.frame 0 0 publish-preview-manifest }T ==
 T{ preview-manifest-filepath s" image name" publication.test-contains? }T -1 ==
+T{ preview-manifest-filepath s\" filter: \"\"" publication.test-contains? }T -1 ==
+T{ preview-manifest-filepath s\" focuser position: \"\"" publication.test-contains? }T -1 ==
+T{ preview-manifest-filepath s\" exposure seconds: \"\"" publication.test-contains? }T -1 ==
+
+\ These values belong to the supplied frame, including target-free calibrations.
+s" 2026-10-30T09:00:00Z" publication.test.frame FRAME_METADATA @ =>" DATE-END"
+s" H-ALPHA" publication.test.frame FRAME_METADATA @ =>" FILTER"
+s" 5232" publication.test.frame FRAME_METADATA @ =>" FOCUSPOS"
+s" 0.125" publication.test.frame FRAME_METADATA @ =>" EXPTIME"
+T{ publication.test.frame 0 0 publish-preview-manifest }T ==
+T{ preview-manifest-filepath s\" time-stamp: \"2026-10-30T09:00:00Z\"" publication.test-contains? }T -1 ==
+T{ preview-manifest-filepath s\" filter: \"H-ALPHA\"" publication.test-contains? }T -1 ==
+T{ preview-manifest-filepath s\" focuser position: \"5232\"" publication.test-contains? }T -1 ==
+T{ preview-manifest-filepath s\" exposure seconds: \"0.125\"" publication.test-contains? }T -1 ==
+s" 0" publication.test.frame FRAME_METADATA @ =>" FOCUSPOS"
+s" 0" publication.test.frame FRAME_METADATA @ =>" EXPTIME"
+T{ publication.test.frame 0 0 publish-preview-manifest }T ==
+T{ preview-manifest-filepath s\" focuser position: \"0\"" publication.test-contains? }T -1 ==
+T{ preview-manifest-filepath s\" exposure seconds: \"0\"" publication.test-contains? }T -1 ==
 preview-manifest-filepath buffer-to-string delete-file drop
 
 publication.test.filepath buffer-to-string delete-file drop

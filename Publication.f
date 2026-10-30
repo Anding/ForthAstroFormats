@@ -84,6 +84,9 @@ ASSIGN no-preview-manifest-extension TO-DO write-preview-manifest-extension
             write-path-manifest-line or
     then
     frame fileid write-frame-manifest-lines or
+    fileid s" filter" s" FILTER" frame FRAME_METADATA @ map@ write-manifest-line or
+    fileid s" focuser position" s" FOCUSPOS" frame FRAME_METADATA @ map@ write-manifest-line or
+    fileid s" exposure seconds" s" EXPTIME" frame FRAME_METADATA @ map@ write-manifest-line or
     fileid write-preview-manifest-extension or
     fileid swap preview-manifest-tmp-filepath finish-image-file
     preview-manifest-tmp-filepath buffer_used 0= if preview-manifest-filepath reset-buffer exit then
