@@ -39,6 +39,10 @@ BEGIN-STRUCTURE StarRecord
     8 +FIELD star.qyy
     8 +FIELD star.qxy
     8 +FIELD star.max-pixel \ uint16_t followed by six alignment bytes; use W@.
+    8 +FIELD star.roundness
+    8 +FIELD star.over-exposed-risk
+    8 +FIELD star.under-exposed-risk
+    8 +FIELD star.exposure-scale
 END-STRUCTURE
 
 256 constant maximum-stars
