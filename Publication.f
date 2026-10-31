@@ -145,7 +145,7 @@ ASSIGN no-preview-manifest-extension TO-DO write-preview-manifest-extension
 
 : save-FITSprojection { frame -- }
 \ Save the supplied frame's viewer projection through its dedicated writer.
-    frame s" .dat" FITSprojection-filepath write-filepath-fits-projection
+    frame s" .wcs" FITSprojection-filepath write-filepath-fits-projection
     frame FITSprojection-filepath save-FITSprojection-to
 ;
 
