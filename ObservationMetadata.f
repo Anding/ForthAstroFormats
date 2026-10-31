@@ -30,7 +30,6 @@ END-ENUMS
 s"  " $value obs.observer
 s"  " $value obs.target
 TSlength buffer: xisf.TSstring
-0 value image_type
 
 : frames ( type -- )
 \ Select the observation type for subsequent acquisitions.
