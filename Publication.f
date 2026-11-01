@@ -36,6 +36,18 @@
     fileid if fileid data-addr data-u fileid write-file filepath-buffer finish-image-file then
 ;
 
+: save-preview-binary-file-to
+    { data-addr data-u filepath-buffer | temporary-buffer -- }
+    filepath-buffer image-temporary-filepath -> temporary-buffer
+    data-addr data-u temporary-buffer save-binary-file-to
+    temporary-buffer buffer_used if
+        temporary-buffer filepath-buffer replace-file-atomically
+    else
+        filepath-buffer reset-buffer
+    then
+    temporary-buffer free-buffer
+;
+
 : no-preview-manifest-extension ( fileid -- ior )
 \ Default extension action: append no additional manifest records.
     drop 0
@@ -79,6 +91,10 @@ ASSIGN no-preview-manifest-extension TO-DO write-preview-manifest-extension
         fileid s" stretched image filepath" stretched-BMPfilepath
             write-path-manifest-line or
     then
+    preview? FITSprojection-filepath buffer_used 0<> and if
+        fileid s" fits keys filepath" FITSprojection-filepath
+            write-path-manifest-line or
+    then
     histogram? if
         fileid s" histogram filepath" histogram-filepath
             write-path-manifest-line or
@@ -94,22 +110,23 @@ ASSIGN no-preview-manifest-extension TO-DO write-preview-manifest-extension
         replace-file-atomically
 ;
 
-: publish-metadata-manifest { frame | fileid -- }
-\ Atomically publish the supplied frame's FITS-key projection path.
-    frame s" .dat" metadata-manifest-filepath
-        write-filepath-metadata-manifest
-    frame s" .tmp" metadata-manifest-tmp-filepath
-        write-filepath-metadata-manifest
+: begin-preview-publication { frame -- ready? }
+\ Invalidate the old manifest before overwriting fixed artifacts. Readers retain
+\ their loaded pixels and accept only a manifest unchanged across artifact reads.
+    preview-BMPfilepath reset-buffer
+    stretched-BMPfilepath reset-buffer
+    histogram-filepath reset-buffer
+    FITSprojection-filepath reset-buffer
+    frame 0 0 publish-preview-manifest
+    preview-manifest-filepath buffer_used 0<>
+;
+
+: publish-metadata-manifest { frame -- }
+\ Publish the complete post-solve preview through its single manifest.
     FITSprojection-filepath buffer_used 0= if exit then
-    metadata-manifest-tmp-filepath open-publication-file -> fileid
-    fileid 0= if metadata-manifest-filepath reset-buffer exit then
-    fileid s" fits keys filepath" FITSprojection-filepath
-        write-path-manifest-line
-    frame fileid write-frame-manifest-lines or
-    fileid swap metadata-manifest-tmp-filepath finish-image-file
-    metadata-manifest-tmp-filepath buffer_used 0= if metadata-manifest-filepath reset-buffer exit then
-    metadata-manifest-tmp-filepath metadata-manifest-filepath
-        replace-file-atomically
+    preview-BMPfilepath buffer_used 0= if exit then
+    stretched-BMPfilepath buffer_used 0= if exit then
+    frame -1 -1 publish-preview-manifest
 ;
 
 16384 constant FITS_PROJECTION_SIZE \ Maximum allocated FITS projection bytes.
@@ -143,10 +160,17 @@ ASSIGN no-preview-manifest-extension TO-DO write-preview-manifest-extension
     projection-buffer free-buffer
 ;
 
-: save-FITSprojection { frame -- }
+: save-FITSprojection { frame | temporary-buffer -- }
 \ Save the supplied frame's viewer projection through its dedicated writer.
     frame s" .wcs" FITSprojection-filepath write-filepath-fits-projection
-    frame FITSprojection-filepath save-FITSprojection-to
+    FITSprojection-filepath image-temporary-filepath -> temporary-buffer
+    frame temporary-buffer save-FITSprojection-to
+    temporary-buffer buffer_used if
+        temporary-buffer FITSprojection-filepath replace-file-atomically
+    else
+        FITSprojection-filepath reset-buffer
+    then
+    temporary-buffer free-buffer
 ;
 
 : save-WCSprojection { frame -- }
@@ -159,12 +183,13 @@ ASSIGN no-preview-manifest-extension TO-DO write-preview-manifest-extension
 \ Save 65,536 four-byte bins without publishing a partially completed preview.
     frame s" .bin" histogram-filepath write-filepath-histogram
     frame FRAME_STATISTICS @ HISTOGRAM 0x40000 histogram-filepath
-        save-binary-file-to
+        save-preview-binary-file-to
 ;
 
 : save-Histogram { frame -- }
-\ Save and independently publish available preview artifacts for direct callers.
+\ Save and independently publish a histogram-only frame for direct callers.
+    frame begin-preview-publication 0= if exit then
     frame save-Histogram-file
     histogram-filepath buffer_used 0= if exit then
-    frame -1 -1 publish-preview-manifest
+    frame 0 -1 publish-preview-manifest
 ;

@@ -80,7 +80,16 @@ pathname; an empty pathname skips I/O. Only allocation failures abort.
 source and destination paths. It temporarily appends the required NUL
 terminators, calls the native `ReplaceFileAtomic` export, and restores the
 retained paths before returning. Replacement exposes the destination only
-after a completed temporary manifest exists.
+after a completed temporary file exists. BMP previews, histogram and viewer
+FITS projections use completed temporary artifacts too; science writers and
+science WCS pathname policy are unchanged.
+
+The application uses fixed `working\preview` artifact names and one `latest.dat`.
+`begin-preview-publication ( frame -- ready? )` atomically invalidates the old
+manifest before overwriting those artifacts. After images and post-solve FITS
+projection finish, `publish-metadata-manifest` publishes their consolidated
+preview manifest, retaining the UUID in `image name`. Consumers verify the
+manifest across artifact reads; no viewer generation directories are retained.
 
 ## Output pathname policy
 
@@ -130,8 +139,8 @@ FITS writer without altering the science writer's action.
 `append-UUID-suffix ( uuid-addr uuid-u filepath-buffer -- )` appends `-` and
 UUID bytes at offset 24, length 12, only when at least 36 bytes are present.
 Missing, empty, or short UUIDs omit the entire science filename suffix.
-Existing science files may be overwritten. UUID-based working directories
-are unchanged.
+Existing science files may be overwritten. Exposure preview working files use
+fixed filenames; science and autofocus run directory policies are unchanged.
 
 10Micron-specific `solver.alignment-FITS` and its regression have moved to
 AstroImagingInForth's `MountAlignment` vocabulary. Formats `Solver.f` retains

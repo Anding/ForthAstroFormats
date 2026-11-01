@@ -3,6 +3,18 @@
 LIBRARY: XISF.dll
 Extern: int "C" ReplaceFileAtomic( char * source, char * destination ) ;
 
+: image-temporary-filepath { destination-buffer | temporary-buffer -- temporary-buffer }
+    FILEPATH_SIZE allocate-buffer -> temporary-buffer
+    destination-buffer buffer_used if
+        destination-buffer buffer-to-string temporary-buffer write-buffer drop
+        destination-buffer BUFFER_LEN_DIR @ temporary-buffer BUFFER_LEN_DIR !
+        s" .tmp" temporary-buffer write-buffer if
+            temporary-buffer reset-buffer cr ." Filepath buffer full" cr
+        then
+    then
+    temporary-buffer
+;
+
 : replace-file-atomically
     { source-buffer destination-buffer -- }
 \ Replace a completed publication, restoring both descriptor paths before returning.

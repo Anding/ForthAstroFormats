@@ -54,6 +54,9 @@ s" 11111111-2222-3333-4444-555555555555"
 Tstart
 
 T{ publication.test-write }T ==
+T{ publication.test.filepath image-temporary-filepath dup
+   buffer-dir-to-string hashS swap free-buffer
+}T publication.test.filepath buffer-dir-to-string hashS ==
 T{ publication.test.filepath
    s" E:\\Coding\\ForthAstroFormats\\testdata\\publication.dat"
    publication.test-contains?
