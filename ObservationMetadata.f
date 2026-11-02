@@ -28,7 +28,7 @@ BEGIN-ENUMS observationType
 END-ENUMS
 
 s"  " $value obs.observer
-s"  " $value obs.target
+s" " $value obs.target
 TSlength buffer: xisf.TSstring
 
 : frames ( type -- )
